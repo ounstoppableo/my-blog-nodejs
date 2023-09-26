@@ -14,15 +14,15 @@
 
   用于记录article的基本信息
 
-  基本字段：
+  ER关系：
 
-  <img src=".\images\QQ截图20230925172808.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926164605.png" style="margin:0" />
 
 - folder表
 
   用于记录文档的信息
 
-  基本字段：
+  ER关系：
 
   <img src=".\images\QQ截图20230925172936.png" style="margin:0" />
 
@@ -30,15 +30,15 @@
 
   用于记录实际文章的信息
 
-  基本字段：
+  ER关系：
 
-  <img src=".\images\QQ截图20230925172959.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926164919.png" style="margin:0" />
 
 - tags表
 
   用于记录tag标签的信息
 
-  基本字段：
+  ER关系：
 
   <img src=".\images\QQ截图20230925173221.png" style="margin:0" />
 
@@ -46,9 +46,13 @@
 
   用于进行article与tag的映射
 
-  基本字段：
+  ER关系：
 
-  <img src=".\images\QQ截图20230925173255.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926165027.png" style="margin:0" />
+
+总体ER关系：
+
+<img src=".\images\QQ截图20230926165112.png" style="margin:0" />
 
 ##### nodejs进行数据库连接
 
