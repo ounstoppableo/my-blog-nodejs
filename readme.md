@@ -16,7 +16,7 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926174459.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926180609.png" style="margin:0" />
 
 - folder表
 
@@ -24,7 +24,7 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230925172936.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926180616.png" style="margin:0" />
 
 - articleDetail表
 
@@ -32,7 +32,7 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926175257.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926180623.png" style="margin:0" />
 
 - tags表
 
@@ -40,7 +40,7 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926174523.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926180630.png" style="margin:0" />
 
 - articleToTag表
 
@@ -48,11 +48,11 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926175353.png" style="margin:0" />
+  <img src=".\images\QQ截图20230926180637.png" style="margin:0" />
 
 总体ER关系：
 
-<img src=".\images\QQ截图20230926174737.png" style="margin:0" />
+<img src=".\images\QQ截图20230926180651.png" style="margin:0" />
 
 ##### nodejs进行数据库连接
 
