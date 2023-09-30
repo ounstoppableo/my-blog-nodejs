@@ -1,9 +1,15 @@
 const pool = require('../mysql/pool')
 const sha256 = require('crypto-js/sha256')
 const jwt = require('jsonwebtoken')
+const moment = require('moment')
+const multer = require('multer')
+const { v4: uuidv4 } = require('uuid')
+const uploadImg = multer({ dest: __dirname + '/../public/images/' })
+const uploadFile = multer({ dest: __dirname + '/../public/temp/' })
 const fs = require('fs')
 var express = require('express');
 var router = express.Router();
+
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -16,13 +22,14 @@ router.get('/', function (req, res, next) {
   //   })
   // })
   pool.query('SELECT * FROM articledetail', (err, data) => {
-    const { articleId, articleContent } = data[0]
+    const { articleId, articleContent } = data[0] ? data[0] : { articleId: undefined, articleContent: undefined }
     res.json({ articleId, articleContent });
   })
 });
 //登录验证
 router.post('/login', (req, res, next) => {
   pool.query('SELECT * FROM user', (err, data) => {
+    if (err) return res.json({ code: 500, msg: '服务器出错误!' })
     const username = sha256(data[0].username).toString()
     const password = data[0].password
     if (username === req.body.username && password === req.body.password) {
@@ -41,6 +48,79 @@ router.get('/userInfo', (req, res, next) => {
   jwt.verify(req.headers.token, '123456', (err) => {
     if (err) return res.json({ code: 401, msg: 'token失效' })
     return res.json({ code: 200, msg: 'token有效' })
+  })
+})
+//首页文件分类
+router.get('/folder', (req, res, next) => {
+  pool.query('select * from folder', (err, data) => {
+    if (err) return res.json({ code: 500, msg: '服务器出错!' })
+    res.json({ code: 200, data: data })
+  })
+})
+//上传图片
+router.post('/uploadImg', uploadImg.single('img'), (req, res, next) => {
+  const path = req.file.path
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) {
+      fs.unlink(path, (err) => {
+        if (err) throw err;
+        console.log('文件已删除');
+      });
+      return res.json({ code: 401, msg: 'token失效' })
+    }
+    const exName = req.file.mimetype.split('/')[1]
+    const filename = req.file.filename
+    fs.renameSync(path, path + `.${exName}`)
+    res.json({ code: 200, data: `/images/${filename}.${exName}` })
+  })
+})
+//上传文件
+router.post('/uploadFile', uploadFile.any(), (req, res, next) => {
+  const path = req.files[0].path
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) {
+      fs.unlink(path, (err) => {
+        if (err) throw err;
+        console.log('文件已删除');
+      });
+      return res.json({ code: 401, msg: 'token失效' })
+    }
+    const fileName = req.files[0].filename
+    res.json({ code: 200, data: `/temp/${fileName}` })
+  })
+})
+//文件删除
+router.delete('/delFile', (req, res, next) => {
+  const path = __dirname + '/../public' + req.body.url
+  fs.unlink(path, (err) => {
+    if (err) return console.log(err)
+    res.json({ code: 200, msg: '删除成功' })
+  })
+})
+//添加文章
+router.post('/addArticle', (req, res, next) => {
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) return res.json({ code: 401, msg: 'token失效' })
+    const { articleId, title, folderId, description, articleUrl, backImgUrl } = req.body
+    const date = moment(new Date()).format('YYYY-MM-DD')
+    const fileUrl = __dirname + '/../public' + articleUrl
+    fs.readFile(fileUrl, (err, fileData) => {
+      if (err) return console.log(err)
+      if (!articleId) {
+        const newArticleId = uuidv4()
+        pool.query('INSERT INTO articleinfo SET ?', { articleId: newArticleId, title, folderId, subTime: date, lastModifyTime: date, description, backImgUrl }, (err) => {
+          if (err) return console.log(err)
+          pool.query('INSERT INTO articledetail SET ?', { articleId: newArticleId, articleContent: fileData }, (err) => {
+            if (err) return console.log(err)
+            res.json({ code: 200, msg: '添加成功' })
+            fs.unlink(fileUrl, (err) => {
+              if (err) throw err;
+              console.log('文件已删除');
+            });
+          })
+        })
+      }
+    })
   })
 })
 module.exports = router;
