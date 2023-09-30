@@ -39,7 +39,7 @@ router.post('/login', (req, res, next) => {
       }, '123456')
       res.json({ code: 200, token: token })
     } else {
-      res.json({ code: 401, meg: "用户名或密码错误" })
+      res.json({ code: 402, meg: "用户名或密码错误" })
     }
   })
 })
