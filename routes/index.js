@@ -60,8 +60,10 @@ router.get('/folder', (req, res, next) => {
 //上传图片
 router.post('/uploadImg', uploadImg.single('img'), (req, res, next) => {
   const path = req.file.path
+  //有token才能上传
   jwt.verify(req.headers.token, '123456', (err) => {
     if (err) {
+      //没token则删除文件
       fs.unlink(path, (err) => {
         if (err) throw err;
         console.log('文件已删除');
@@ -77,8 +79,10 @@ router.post('/uploadImg', uploadImg.single('img'), (req, res, next) => {
 //上传文件
 router.post('/uploadFile', uploadFile.any(), (req, res, next) => {
   const path = req.files[0].path
+  //有token才能上传
   jwt.verify(req.headers.token, '123456', (err) => {
     if (err) {
+      //没token删除文件
       fs.unlink(path, (err) => {
         if (err) throw err;
         console.log('文件已删除');
@@ -104,15 +108,19 @@ router.post('/addArticle', (req, res, next) => {
     const { articleId, title, folderId, description, articleUrl, backImgUrl } = req.body
     const date = moment(new Date()).format('YYYY-MM-DD')
     const fileUrl = __dirname + '/../public' + articleUrl
+    //先把文章读取出来
     fs.readFile(fileUrl, (err, fileData) => {
       if (err) return console.log(err)
       if (!articleId) {
         const newArticleId = uuidv4()
+        //先更新文章信息表，有了articleId再进行文章内容表的更新
         pool.query('INSERT INTO articleinfo SET ?', { articleId: newArticleId, title, folderId, subTime: date, lastModifyTime: date, description, backImgUrl }, (err) => {
           if (err) return console.log(err)
+          //文章内容表的更新
           pool.query('INSERT INTO articledetail SET ?', { articleId: newArticleId, articleContent: fileData }, (err) => {
             if (err) return console.log(err)
             res.json({ code: 200, msg: '添加成功' })
+            //更新完删除本地存储
             fs.unlink(fileUrl, (err) => {
               if (err) throw err;
               console.log('文件已删除');
