@@ -95,10 +95,13 @@ router.post('/uploadFile', uploadFile.any(), (req, res, next) => {
 })
 //文件删除
 router.delete('/delFile', (req, res, next) => {
-  const path = __dirname + '/../public' + req.body.url
-  fs.unlink(path, (err) => {
-    if (err) return console.log(err)
-    res.json({ code: 200, msg: '删除成功' })
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) res.json({ code: 401, msg: 'token失效' })
+    const path = __dirname + '/../public' + req.body.url
+    fs.unlink(path, (err) => {
+      if (err) return console.log(err)
+      res.json({ code: 200, msg: '删除成功' })
+    })
   })
 })
 //添加文章
