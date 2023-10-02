@@ -16,7 +16,17 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926180609.png" style="margin:0" />
+  ![](.\images\Snipaste_2023-10-02_16-49-18.png)
+
+  | 列名           | 数据类型 | 主键 | 外键 |
+  | -------------- | -------- | ---- | ---- |
+  | articleId      | varchar  | √    |      |
+  | title          | varchar  |      |      |
+  | subTime        | datetime |      |      |
+  | lastModifyTime | datetime |      |      |
+  | folderId       | varchar  |      | √    |
+  | description    | varchar  |      |      |
+  | backImgUrl     | varchar  |      |      |
 
 - folder表
 
@@ -24,7 +34,12 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926180616.png" style="margin:0" />
+  ![](.\images\Snipaste_2023-10-02_16-47-49.png)
+
+  | 列名       | 数据类型 | 主键 | 外键 |
+  | ---------- | -------- | ---- | ---- |
+  | folderId   | varchar  | √    |      |
+  | folderName |          |      |      |
 
 - articleDetail表
 
@@ -32,7 +47,12 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926180623.png" style="margin:0" />
+  ![](.\images\Snipaste_2023-10-02_16-48-43.png)
+
+  | 列名           | 数据类型   | 主键 | 外键 |
+  | -------------- | ---------- | ---- | ---- |
+  | articleId      | varchar    | √    | √    |
+  | articleContent | mediumtext |      |      |
 
 - tags表
 
@@ -40,7 +60,12 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926180630.png" style="margin:0" />
+  ![](.\images\Snipaste_2023-10-02_16-51-00.png)
+
+  | 列名     | 数据类型 | 主键 | 外键 |
+  | -------- | -------- | ---- | ---- |
+  | tagName  | varchar  | √    |      |
+  | tagColor | varchar  |      |      |
 
 - articleToTag表
 
@@ -48,11 +73,16 @@
 
   ER关系：
 
-  <img src=".\images\QQ截图20230926180637.png" style="margin:0" />
+  ![](.\images\Snipaste_2023-10-02_16-52-06.png)
+  
+  | 列名      | 数据类型 | 主键 | 外键 |
+  | --------- | -------- | ---- | ---- |
+  | articleId | varchar  |      | √    |
+  | tagName   | varchar  |      | √    |
 
 总体ER关系：
 
-<img src=".\images\QQ截图20230926180651.png" style="margin:0" />
+![](.\images\Snipaste_2023-10-02_16-53-16.png)
 
 ##### nodejs进行数据库连接
 
