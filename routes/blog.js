@@ -9,7 +9,6 @@ const uploadFile = multer({ dest: __dirname + '/../public/temp/' })
 const fs = require('fs')
 const express = require('express');
 const { rdmRgbColor } = require('../utils/randomColor')
-const { resolve } = require('path')
 const router = express.Router();
 
 
