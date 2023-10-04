@@ -73,16 +73,16 @@
 
   ER关系：
 
-  ![](.\images\Snipaste_2023-10-02_16-52-06.png)
+  ![](D:\BaiduNetdiskDownload\workspace\my-blog\my-blog-nodejs\images\Snipaste_2023-10-04_17-07-05.png)
   
   | 列名      | 数据类型 | 主键 | 外键 |
   | --------- | -------- | ---- | ---- |
-  | articleId | varchar  |      | √    |
-  | tagName   | varchar  |      | √    |
+  | articleId | varchar  | √    | √    |
+  | tagName   | varchar  | √    | √    |
 
 总体ER关系：
 
-![](.\images\Snipaste_2023-10-02_16-53-16.png)
+![](D:\BaiduNetdiskDownload\workspace\my-blog\my-blog-nodejs\images\Snipaste_2023-10-04_17-08-00.png)
 
 ##### nodejs进行数据库连接
 
