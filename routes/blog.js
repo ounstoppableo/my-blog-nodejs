@@ -13,6 +13,7 @@ const { resolve } = require('path')
 const { checkPrimeSync } = require('crypto')
 const router = express.Router();
 const mdImgtagToHtmlImgtag = require('../utils/mdImgtagToHtmlImgtag')
+const { count } = require('console')
 
 
 /* GET home page. */
@@ -395,6 +396,153 @@ router.get('/delArticle/:articleId', (req, res, next) => {
     })
   }).then(() => {
     res.json({ code: 200, msg: '删除成功' })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器出错' })
+  })
+})
+//获取文件夹分类下的文章数量
+router.get('/articleInFolderCount', (req, res, next) => {
+  new Promise((finalResolve, finalReject) => {
+    let result = []
+    pool.query('select * from folder', (err, data) => {
+      if (err) return finalReject(err)
+      result = data
+      const promiseArr = result.map(item => {
+        return new Promise((resolve) => {
+          pool.query('select COUNT(*) from articleInfo where folderId = ?', item.folderId, (err, data) => {
+            if (err) return finalReject(err)
+            item.count = data[0]['COUNT(*)']
+            resolve(1)
+          })
+        })
+      })
+      Promise.all(promiseArr).then(() => {
+        finalResolve(result)
+      })
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器错误' })
+  })
+})
+//单个文件夹对应的文章信息页
+router.get('/singleFolder/:folderId', (req, res, next) => {
+  const { folderId } = req.params
+  const result = {}
+  new Promise((finalResolve, finalReject) => {
+    pool.query('select * from articleInfo where folderId = ? order by lastModifyTime DESC', folderId, (err, data) => {
+      if (err) return finalReject(err)
+      result.articleInfos = data
+      pool.query('select folderName from folder where folderId = ?', folderId, (err, data) => {
+        if (err) return finalReject(err)
+        result.folderName = data[0].folderName
+        result.articleInfos.forEach(item => item.folderName = result.folderName)
+        const promiseArr = result.articleInfos.map(item => {
+          return new Promise((resolve) => {
+            pool.query('select * from articletotag where articleId = ? ', item.articleId, (err, data) => {
+              if (err) return finalReject(err)
+              item.tags = data
+              const promiseArr2 = item.tags.map(tag => {
+                return new Promise((resolve2) => {
+                  pool.query('select tagColor from tags where tagName = ?', tag.tagName, (err, data) => {
+                    if (err) return finalReject(err)
+                    tag.tagColor = data[0].tagColor
+                    resolve2(1)
+                  })
+                })
+              })
+              Promise.all(promiseArr2).then(() => resolve(1))
+            })
+          })
+        })
+        Promise.all(promiseArr).then(() => { finalResolve(result) })
+      })
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器错误' })
+  })
+})
+//获取标签分类下的文章数量
+router.get('/articleInTagCount', (req, res, next) => {
+  new Promise((finalResolve, finalReject) => {
+    let result = []
+    pool.query('select * from tags', (err, data) => {
+      if (err) return finalReject(err)
+      result = data
+      const promiseArr = result.map(item => {
+        return new Promise((resolve) => {
+          pool.query('select COUNT(*) from articletotag where tagName = ?', item.tagName, (err, data) => {
+            if (err) return finalReject(err)
+            item.count = data[0]['COUNT(*)']
+            resolve(1)
+          })
+        })
+      })
+      Promise.all(promiseArr).then(() => finalResolve(result))
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器错误' })
+  })
+})
+//单个标签对应的文章信息页
+router.get('/singleTag/:tagName', (req, res, next) => {
+  const { tagName } = req.params
+  new Promise((finalResolve, finalReject) => {
+    const result = { tagName }
+    pool.query('select articleId from articletotag where tagName = ?', tagName, (err, data) => {
+      if (err) return finalReject(err)
+      result.articleInfos = []
+      const promiseArr = data.map(item => {
+        return new Promise((resolve) => {
+          pool.query('select * from articleInfo where articleId = ?', item.articleId, (err, data) => {
+            if (err) return finalReject(err)
+            result.articleInfos.push(data[0])
+            resolve(1)
+          })
+        })
+      })
+      Promise.all(promiseArr).then(() => {
+        const promiseArr2 = result.articleInfos.map(item => {
+          return new Promise((resolve2) => {
+            pool.query('select folderName from folder where folderId = ?', item.folderId, (err, data) => {
+              if (err) return finalReject(err)
+              item.folderName = data[0].folderName
+              resolve2(1)
+            })
+          })
+        })
+        const promiseArr3 = result.articleInfos.map(item => {
+          return new Promise((resolve3) => {
+            pool.query('select * from articletotag where articleId = ?', item.articleId, (err, data) => {
+              if (err) return finalReject(err)
+              item.tags = data
+              const promiseArr4 = item.tags.map(tag => {
+                return new Promise((resolve5) => {
+                  pool.query('select tagColor from tags where tagName = ?', tag.tagName, (err, data) => {
+                    if (err) return finalReject(err)
+                    tag.tagColor = data[0].tagColor
+                    resolve5(1)
+                  })
+                })
+              })
+              Promise.all(promiseArr4).then(() => resolve3(1))
+            })
+          })
+        })
+        Promise.all([...promiseArr2, ...promiseArr3]).then(() => finalResolve(result))
+      })
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
   }, (err) => {
     console.log(err)
     res.json({ code: 500, msg: '服务器出错' })
