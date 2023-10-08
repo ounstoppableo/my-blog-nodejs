@@ -9,12 +9,17 @@ const uploadFile = multer({ dest: __dirname + '/../public/temp/' })
 const fs = require('fs')
 const express = require('express');
 const { rdmRgbColor } = require('../utils/randomColor')
-const { resolve } = require('path')
-const { checkPrimeSync } = require('crypto')
 const router = express.Router();
 const mdImgtagToHtmlImgtag = require('../utils/mdImgtagToHtmlImgtag')
-const { count } = require('console')
-
+const { resolve } = require('path')
+const lodash = require('lodash')
+const browserPriority = {
+  1: 'Safari',
+  2: 'Chrome',
+  3: 'Opera',
+  4: 'Firefox',
+  5: 'Edg',
+}
 
 /* GET home page. */
 // router.get('/', function (req, res, next) {
@@ -546,6 +551,182 @@ router.get('/singleTag/:tagName', (req, res, next) => {
   }, (err) => {
     console.log(err)
     res.json({ code: 500, msg: '服务器出错' })
+  })
+})
+//添加留言-文章
+router.post('/addMsgForArticle', (req, res, next) => {
+  const { name, content, fatherMsgId, articleId, mail, website } = req.body
+  const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+  let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
+  const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
+  const ua = req.headers['user-agent'].split(' ')
+  let browser = ''
+  ua.forEach(item => {
+    if (browser) {
+      let browserPri = 0
+      let itemPri = 0
+      Object.keys(browserPriority).forEach(key => {
+        if (browser.includes(browserPriority[key])) browserPri = +key
+        if (item.includes(browserPriority[key])) itemPri = +key
+      })
+      if (browserPri < itemPri) browser = item
+    } else {
+      browser = item
+    }
+  })
+  const upvoke = 0
+  new Promise((finalResolve, finalReject) => {
+    //查头像
+    pool.query('select * from mailmapavatar where mail=?', mail, (err, data) => {
+      if (err) return finalReject(err)
+      if (data[0]) avatar = data[0].avatar
+      else {
+        pool.query('insert into mailmapavatar set ?', { mail, avatar }, (err) => {
+          if (err) console.log(err)
+        })
+      }
+      pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+        if (err) return finalReject(err)
+        finalResolve()
+      })
+    })
+  }).then(() => {
+    res.json({ code: 200, msg: '添加成功' })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器出错' })
+  })
+})
+//获取留言-文章
+router.get('/getMsgForArticle/:articleId/:page/:limit', (req, res, next) => {
+  const { articleId, page, limit } = req.params
+  let result = {}
+  new Promise((finalResolve, finalReject) => {
+    pool.query('select * from msgboardforarticle where articleId = ? order by subTime DESC', articleId, (err, data) => {
+      if (err) return finalReject(err)
+      result.msgData = data
+      result.msgCount = data.length
+      const map = new Map()
+      const promiseArr = data.map(item => {
+        return new Promise((resolve) => {
+          if (item.fatherMsgId) {
+            map.set(item.msgId, true)
+            const target = data.find(item2 => +item2.msgId === +item.fatherMsgId)
+            item.parent = {
+              parentName: target.name,
+              parentWebsite: target.website
+            }
+            target.children ? target.children.push(item) : target.children = [item]
+          }
+          resolve(1)
+        })
+      })
+      Promise.all(promiseArr).then(() => {
+        result.msgData = result.msgData.filter(item => !map.get(item.msgId))
+        result.pages = Math.ceil(result.msgData.length / limit) || 1
+        if (page > result.pages) {
+          finalReject('page超出范围')
+        }
+        const start = (page - 1) * limit
+        const end = limit * page
+        result.msgData = result.msgData.slice(start, end)
+        finalResolve(result)
+      })
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
+  }, (err) => {
+    console.log(err)
+    if (err === 'page超出范围') res.json({ code: 400, msg: err })
+    else res.json({ code: 500, msg: '服务器错误' })
+  })
+})
+//添加留言-留言板
+router.post('/addMsgForBoard', (req, res, next) => {
+  const { name, content, fatherMsgId, mail, website } = req.body
+  const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+  let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
+  const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
+  const ua = req.headers['user-agent'].split(' ')
+  let browser = ''
+  ua.forEach(item => {
+    if (browser) {
+      let browserPri = 0
+      let itemPri = 0
+      Object.keys(browserPriority).forEach(key => {
+        if (browser.includes(browserPriority[key])) browserPri = +key
+        if (item.includes(browserPriority[key])) itemPri = +key
+      })
+      if (browserPri < itemPri) browser = item
+    } else {
+      browser = item
+    }
+  })
+  const upvoke = 0
+  new Promise((finalResolve, finalReject) => {
+    //查头像
+    pool.query('select * from mailmapavatar where mail=?', mail, (err, data) => {
+      if (err) return finalReject(err)
+      if (data[0]) avatar = data[0].avatar
+      else {
+        pool.query('insert into mailmapavatar set ?', { mail, avatar }, (err) => {
+          if (err) console.log(err)
+        })
+      }
+      pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+        if (err) return finalReject(err)
+        finalResolve()
+      })
+    })
+  }).then(() => {
+    res.json({ code: 200, msg: '添加成功' })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器出错' })
+  })
+})
+//获取留言-留言板
+router.get('/getMsgForBoard/:page/:limit', (req, res, next) => {
+  const {page, limit } = req.params
+  let result = {}
+  new Promise((finalResolve, finalReject) => {
+    pool.query('select * from msgboardforall order by subTime DESC', (err, data) => {
+      if (err) return finalReject(err)
+      result.msgData = data
+      result.msgCount = data.length
+      const map = new Map()
+      const promiseArr = data.map(item => {
+        return new Promise((resolve) => {
+          if (item.fatherMsgId) {
+            map.set(item.msgId, true)
+            const target = data.find(item2 => +item2.msgId === +item.fatherMsgId)
+            item.parent = {
+              parentName: target.name,
+              parentWebsite: target.website
+            }
+            target.children ? target.children.push(item) : target.children = [item]
+          }
+          resolve(1)
+        })
+      })
+      Promise.all(promiseArr).then(() => {
+        result.msgData = result.msgData.filter(item => !map.get(item.msgId))
+        result.pages = Math.ceil(result.msgData.length / limit) || 1
+        if (page > result.pages) {
+          finalReject('page超出范围')
+        }
+        const start = (page - 1) * limit
+        const end = limit * page
+        result.msgData = result.msgData.slice(start, end)
+        finalResolve(result)
+      })
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
+  }, (err) => {
+    console.log(err)
+    if (err === 'page超出范围') res.json({ code: 400, msg: err })
+    else res.json({ code: 500, msg: '服务器错误' })
   })
 })
 module.exports = router;
