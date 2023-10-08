@@ -73,16 +73,73 @@
 
   ER关系：
 
-  ![](D:\BaiduNetdiskDownload\workspace\my-blog\my-blog-nodejs\images\Snipaste_2023-10-04_17-07-05.png)
+  ![](.\images\Snipaste_2023-10-04_17-07-05.png)
   
   | 列名      | 数据类型 | 主键 | 外键 |
   | --------- | -------- | ---- | ---- |
   | articleId | varchar  | √    | √    |
   | tagName   | varchar  | √    | √    |
 
+- msgboardforarticle表
+
+  存储文章下留言
+
+  | 列名        | 数据类型 | 主键 | 外键 |
+  | ----------- | -------- | ---- | ---- |
+  | msgId       | int      | √    |      |
+  | avatar      | varchar  |      |      |
+  | articleId   | varchar  |      | √    |
+  | name        | varchar  |      |      |
+  | content     | varchar  |      |      |
+  | subTime     | datetime |      |      |
+  | browser     | varchar  |      |      |
+  | device      | varchar  |      |      |
+  | upvoke      | int      |      |      |
+  | fatherMsgId | int      |      |      |
+  | mail        | varchar  |      |      |
+  | website     | varchar  |      |      |
+
+  ER关系：
+
+  ![](.\images\Snipaste_2023-10-08_18-17-44.png)
+
+- msgboardforall表
+
+  存储留言板下的留言
+
+  | 列名        | 数据类型 | 主键 | 外键 |
+  | ----------- | -------- | ---- | ---- |
+  | msgId       | int      | √    |      |
+  | avatar      | varchar  |      |      |
+  | name        | varchar  |      |      |
+  | content     | varchar  |      |      |
+  | subTime     | datetime |      |      |
+  | browser     | varchar  |      |      |
+  | device      | varchar  |      |      |
+  | upvoke      | int      |      |      |
+  | fatherMsgId | int      |      |      |
+  | mail        | varchar  |      |      |
+  | website     | varchar  |      |      |
+
+  ER关系：
+
+  ![](.\images\Snipaste_2023-10-08_18-20-46.png)
+
+- mailmapavatar表
+
+  用于留言区域对应用户头像
+
+  | 列名   | 数据类型 | 主键 | 外键 |
+  | ------ | -------- | ---- | ---- |
+  | mail   | varchar  | √    |      |
+  | avatar | varchar  |      |      |
+
+  ER关系：
+  ![](.\images\Snipaste_2023-10-08_18-23-00.png)
+
 总体ER关系：
 
-![](D:\BaiduNetdiskDownload\workspace\my-blog\my-blog-nodejs\images\Snipaste_2023-10-04_17-08-00.png)
+![](.\images\Snipaste_2023-10-08_18-24-59.png)
 
 ##### nodejs进行数据库连接
 
