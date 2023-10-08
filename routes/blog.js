@@ -434,8 +434,9 @@ router.get('/articleInFolderCount', (req, res, next) => {
   })
 })
 //单个文件夹对应的文章信息页
-router.get('/singleFolder/:folderId', (req, res, next) => {
-  const { folderId } = req.params
+router.get('/singleFolder/:folderId/:page/:limit', (req, res, next) => {
+  const { folderId, page, limit } = req.params
+  if (page <= 0 || limit <= 0) return res.json({ code: 400, msg: 'page或limit有误' })
   const result = {}
   new Promise((finalResolve, finalReject) => {
     pool.query('select * from articleInfo where folderId = ? order by lastModifyTime DESC', folderId, (err, data) => {
@@ -467,6 +468,12 @@ router.get('/singleFolder/:folderId', (req, res, next) => {
       })
     })
   }).then((data) => {
+    const start = (page - 1) * limit
+    const end = page * limit
+    data.total = data.articleInfos.length
+    data.pages = Math.ceil(data.articleInfos.length / limit)
+    if (page > data.pages) return res.json({ code: 400, msg: 'page超过限制' })
+    data.articleInfos = data.articleInfos.slice(start, end)
     res.json({ code: 200, data })
   }, (err) => {
     console.log(err)
@@ -499,8 +506,9 @@ router.get('/articleInTagCount', (req, res, next) => {
   })
 })
 //单个标签对应的文章信息页
-router.get('/singleTag/:tagName', (req, res, next) => {
-  const { tagName } = req.params
+router.get('/singleTag/:tagName/:page/:limit', (req, res, next) => {
+  const { tagName, page, limit } = req.params
+  if (page <= 0 || limit <= 0) return res.json({ code: 400, msg: 'page或limit有误' })
   new Promise((finalResolve, finalReject) => {
     const result = { tagName }
     pool.query('select articleId from articletotag where tagName = ?', tagName, (err, data) => {
@@ -547,6 +555,12 @@ router.get('/singleTag/:tagName', (req, res, next) => {
       })
     })
   }).then((data) => {
+    const start = (page - 1) * limit
+    const end = page * limit
+    data.total = data.articleInfos.length
+    data.pages = Math.ceil(data.articleInfos.length / limit)
+    if (page > data.pages) return res.json({ code: 400, msg: 'page超出限制' })
+    data.articleInfos = data.articleInfos.slice(start, end)
     res.json({ code: 200, data })
   }, (err) => {
     console.log(err)
@@ -687,7 +701,7 @@ router.post('/addMsgForBoard', (req, res, next) => {
 })
 //获取留言-留言板
 router.get('/getMsgForBoard/:page/:limit', (req, res, next) => {
-  const {page, limit } = req.params
+  const { page, limit } = req.params
   let result = {}
   new Promise((finalResolve, finalReject) => {
     pool.query('select * from msgboardforall order by subTime DESC', (err, data) => {
@@ -729,4 +743,55 @@ router.get('/getMsgForBoard/:page/:limit', (req, res, next) => {
     else res.json({ code: 500, msg: '服务器错误' })
   })
 })
+//获取文章信息-分页
+router.get('/getArticleInfoByPage/:page/:limit', (req, res, next) => {
+  const { page, limit } = req.params
+  if (page <= 0 || limit <= 0) return res.json({ code: 400, msg: 'page或limit有误' })
+  const articleInfoList = []
+  new Promise((resolve, reject) => {
+    //获取文章基本信息
+    const sql = `select * from articleinfo order by lastModifyTime DESC`
+    pool.query(sql, (err, dataForArticleinfo) => {
+      if (err) return reject(err)
+      const promiseArr = dataForArticleinfo.map((item, index) => {
+        articleInfoList.push(item)
+        //获取文章标签
+        return new Promise((resolve) => {
+          pool.query('select folderName from folder where folderId = ?', [item.folderId], (err, dataForfolder) => {
+            if (err) return reject(err)
+            articleInfoList[index].folderName = dataForfolder[0].folderName
+            pool.query('select * from articletotag where articleId = ?', [item.articleId], (err, dataForArticletotag) => {
+              if (err) return reject(err)
+              articleInfoList[index].tags = []
+              const promiseArr = dataForArticletotag.map(item => {
+                return new Promise((resolve) => {
+                  pool.query('select * from tags where tagName = ?', [item.tagName], (err, dataForTags) => {
+                    if (err) return reject(err)
+                    articleInfoList[index].tags.push(dataForTags[0])
+                    resolve(1)
+                  })
+                })
+              })
+              Promise.all(promiseArr).then(() => { resolve(1) })
+            })
+          })
+        })
+      })
+      Promise.all(promiseArr).then(() => { resolve(1) })
+    })
+  }).then(() => {
+    const start = (page - 1) * limit
+    const end = page * limit
+    const result = {}
+    result.pages = Math.ceil(articleInfoList.length / limit)
+    result.total = articleInfoList.length
+    if (page > result.pages) return res.json({ code: 400, msg: 'page超过最大页数' })
+    result.articleInfoList = articleInfoList.slice(start, end)
+    res.json({ code: 200, data: result })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器出错' })
+  })
+}
+)
 module.exports = router;
