@@ -471,7 +471,7 @@ router.get('/singleFolder/:folderId/:page/:limit', (req, res, next) => {
     const start = (page - 1) * limit
     const end = page * limit
     data.total = data.articleInfos.length
-    data.pages = Math.ceil(data.articleInfos.length / limit)
+    data.pages = Math.ceil(data.articleInfos.length / limit) || 1
     if (page > data.pages) return res.json({ code: 400, msg: 'page超过限制' })
     data.articleInfos = data.articleInfos.slice(start, end)
     res.json({ code: 200, data })
@@ -558,7 +558,7 @@ router.get('/singleTag/:tagName/:page/:limit', (req, res, next) => {
     const start = (page - 1) * limit
     const end = page * limit
     data.total = data.articleInfos.length
-    data.pages = Math.ceil(data.articleInfos.length / limit)
+    data.pages = Math.ceil(data.articleInfos.length / limit) || 1
     if (page > data.pages) return res.json({ code: 400, msg: 'page超出限制' })
     data.articleInfos = data.articleInfos.slice(start, end)
     res.json({ code: 200, data })
@@ -783,7 +783,7 @@ router.get('/getArticleInfoByPage/:page/:limit', (req, res, next) => {
     const start = (page - 1) * limit
     const end = page * limit
     const result = {}
-    result.pages = Math.ceil(articleInfoList.length / limit)
+    result.pages = Math.ceil(articleInfoList.length / limit) || 1
     result.total = articleInfoList.length
     if (page > result.pages) return res.json({ code: 400, msg: 'page超过最大页数' })
     result.articleInfoList = articleInfoList.slice(start, end)
@@ -794,4 +794,44 @@ router.get('/getArticleInfoByPage/:page/:limit', (req, res, next) => {
   })
 }
 )
+//点赞功能-文章
+router.get('/upvokeForArticle/:articleId/:msgId/:checked', (req, res, next) => {
+  const { articleId, msgId, checked } = req.params
+  new Promise((finalResolve, finalReject) => {
+    pool.query('select upvoke from msgboardforarticle where articleId=? and msgId = ?', [articleId, msgId], (err, data) => {
+      if (err) return finalReject(err)
+      const upvokeCount = data[0].upvoke
+      pool.query('update msgboardforarticle set upvoke = ? where articleId=? and msgId = ?', [+checked === 1 ? upvokeCount + 1 : upvokeCount - 1, articleId, msgId], (err) => {
+        if (err) return finalReject(err)
+        finalResolve(1)
+      })
+    })
+
+  }).then(() => {
+    res.json({ code: 200, msg: '点赞成功' })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器错误' })
+  })
+})
+//点赞功能-留言板
+router.get('/upvokeForBoard/:msgId/:checked', (req, res, next) => {
+  const { msgId, checked } = req.params
+  new Promise((finalResolve, finalReject) => {
+    pool.query('select upvoke from msgboardforall where msgId = ?', [msgId], (err, data) => {
+      if (err) return finalReject(err)
+      const upvokeCount = data[0].upvoke
+      pool.query('update msgboardforall set upvoke = ? where msgId = ?', [+checked === 1 ? upvokeCount + 1 : upvokeCount - 1, msgId], (err) => {
+        if (err) return finalReject(err)
+        finalResolve(1)
+      })
+    })
+
+  }).then(() => {
+    res.json({ code: 200, msg: '点赞成功' })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器错误' })
+  })
+})
 module.exports = router;
