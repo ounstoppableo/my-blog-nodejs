@@ -149,7 +149,7 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     host: 'localhost:3306',
     user: 'root',
-    password: 'woaini121',
+    password: '你的密码',
     database: 'myblog'
 });
 module.exports = pool
