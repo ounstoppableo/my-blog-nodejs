@@ -439,7 +439,7 @@ router.get('/singleFolder/:folderId/:page/:limit', (req, res, next) => {
   if (page <= 0 || limit <= 0) return res.json({ code: 400, msg: 'page或limit有误' })
   const result = {}
   new Promise((finalResolve, finalReject) => {
-    pool.query('select * from articleInfo where folderId = ? order by lastModifyTime DESC', folderId, (err, data) => {
+    pool.query('select * from articleinfo where folderId = ? order by lastModifyTime DESC', folderId, (err, data) => {
       if (err) return finalReject(err)
       result.articleInfos = data
       pool.query('select folderName from folder where folderId = ?', folderId, (err, data) => {
@@ -516,7 +516,7 @@ router.get('/singleTag/:tagName/:page/:limit', (req, res, next) => {
       result.articleInfos = []
       const promiseArr = data.map(item => {
         return new Promise((resolve) => {
-          pool.query('select * from articleInfo where articleId = ?', item.articleId, (err, data) => {
+          pool.query('select * from articleinfo where articleId = ?', item.articleId, (err, data) => {
             if (err) return finalReject(err)
             result.articleInfos.push(data[0])
             resolve(1)
