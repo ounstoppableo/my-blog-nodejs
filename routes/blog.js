@@ -415,7 +415,7 @@ router.get('/articleInFolderCount', (req, res, next) => {
       result = data
       const promiseArr = result.map(item => {
         return new Promise((resolve) => {
-          pool.query('select COUNT(*) from articleInfo where folderId = ?', item.folderId, (err, data) => {
+          pool.query('select COUNT(*) from articleinfo where folderId = ?', item.folderId, (err, data) => {
             if (err) return finalReject(err)
             item.count = data[0]['COUNT(*)']
             resolve(1)
