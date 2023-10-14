@@ -834,4 +834,26 @@ router.get('/upvokeForBoard/:msgId/:checked', (req, res, next) => {
     res.json({ code: 500, msg: '服务器错误' })
   })
 })
+//获取前一个文章和后一个文章
+router.get('/preAndNextArticle/:articleId', (req, res, next) => {
+  new Promise((finalResolve, finalReject) => {
+    const { articleId } = req.params
+    pool.query('select articleId,title from articleinfo', (err, data) => {
+      if (err) return finalReject(err)
+      const index = data.findIndex(item => item.articleId === articleId)
+      const result = {
+        pre: index > 0 ? data[index - 1].articleId : '',
+        preTitle: index > 0 ? data[index - 1].title : '',
+        next: index < data.length - 1 ? data[index + 1].articleId : '',
+        nextTitle: index < data.length - 1 ? data[index + 1].title : '',
+      }
+      finalResolve(result)
+    })
+  }).then((data) => {
+    res.json({ code: 200, data })
+  }, (err) => {
+    console.log(err)
+    res.json({ code: 500, msg: '服务器出错' })
+  })
+})
 module.exports = router;
