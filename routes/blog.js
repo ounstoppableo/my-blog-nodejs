@@ -838,7 +838,7 @@ router.get('/upvokeForBoard/:msgId/:checked', (req, res, next) => {
 router.get('/preAndNextArticle/:articleId', (req, res, next) => {
   new Promise((finalResolve, finalReject) => {
     const { articleId } = req.params
-    pool.query('select articleId,title from articleinfo', (err, data) => {
+    pool.query('select articleId,title from articleinfo order by lastModifyTime DESC', (err, data) => {
       if (err) return finalReject(err)
       const index = data.findIndex(item => item.articleId === articleId)
       const result = {
