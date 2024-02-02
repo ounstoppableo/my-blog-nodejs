@@ -936,7 +936,7 @@ router.post('/addMusic',(req,res)=>{
     const param = req.body
     const path = resolve(__dirname,'../public/temp',param.lyricUrl)
     new Promise((resolve,reject)=>{
-      const lyric = fs.readFileSync(path).toString()
+      const lyric = param.lyricUrl ? fs.readFileSync(path).toString():''
       pool.query('insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?',[param.picUrl,lyric,param.musicUrl,param.musicName,param.musicAuthor],(err,data)=>{
         if(err) {
           console.log(err)
