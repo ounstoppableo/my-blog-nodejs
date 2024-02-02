@@ -874,7 +874,7 @@ router.post('/uploadMusic', uploadMusic.single('music'), (req, res) => {
     const exName = 'mp3'
     const filename = req.file.filename
     fs.renameSync(path, path + `.${exName}`)
-    res.json({ code: 200, msg: '音乐上传成功', url: `/music/${filename}.mp3` })
+    res.json({ code: 200, msg: '音乐上传成功', url: `${filename}.mp3` })
   })
 })
 //删除音乐
@@ -883,7 +883,7 @@ router.get('/deleteMusic/:path', (req, res) => {
     if (err) {
       return res.json({ code: 401, msg: 'token失效' })
     }
-    const path = resolve(__dirname+'/../public/music/'+req.params.path)
+    const path = resolve(__dirname,'../public/music',req.params.path)
     fs.unlink(path, (err) => {
       if (err) {
         console.log(err)
