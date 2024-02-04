@@ -141,7 +141,7 @@ router.post('/addArticle', (req, res, next) => {
         if (!articleId) {
           const newArticleId = uuidv4()
           //先更新文章信息表，有了articleId再进行文章内容表的更新
-          pool.query('INSERT INTO articleinfo SET ?', { articleId: newArticleId, title, folderId, subTime: date, lastModifyTime: date, description, backImgUrl }, (err) => {
+          pool.query('INSERT INTO articleinfo SET ?', { articleId: newArticleId, title, folderId, subTime: date, lastModifyTime: date, description, backImgUrl, VT: 0 }, (err) => {
             if (err) return reject(err)
             //文章内容表的更新
             pool.query('INSERT INTO articledetail SET ?', { articleId: newArticleId, articleContent: fileData }, (err) => {
@@ -270,6 +270,13 @@ router.get('/getArticle/:articleId', (req, res, next) => {
 router.get('/getArticleInfo/:articleId', (req, res, next) => {
   const { articleId } = req.params
   const articleInfoList = []
+  //设置访问量
+  pool.query('select VT from articleinfo where articleId = ?', [articleId], (err, data) => {
+    const VT = data[0].VT
+    pool.query('update articleinfo set VT=? where articleId = ?', [VT + 1, articleId], (err) => {
+      if (err) console.log(err)
+    })
+  })
   new Promise((resolve, reject) => {
     //获取文章基本信息
     const sql = `select * from articleinfo where articleId = ? order by subTime DESC`
@@ -883,14 +890,14 @@ router.get('/deleteMusic/:path', (req, res) => {
     if (err) {
       return res.json({ code: 401, msg: 'token失效' })
     }
-    const path = resolve(__dirname,'../public/music',req.params.path)
+    const path = resolve(__dirname, '../public/music', req.params.path)
     fs.unlink(path, (err) => {
       if (err) {
         console.log(err)
-        return res.json({code:500,msg:'删除失败'})
+        return res.json({ code: 500, msg: '删除失败' })
       }
       console.log('文件已删除');
-      res.json({code:200,msg:'删除成功'})
+      res.json({ code: 200, msg: '删除成功' })
     });
   })
 })
@@ -916,53 +923,67 @@ router.get('/deleteLyric/:path', (req, res) => {
     if (err) {
       return res.json({ code: 401, msg: 'token失效' })
     }
-    const path = resolve(__dirname+'/../public/temp/'+req.params.path)
+    const path = resolve(__dirname + '/../public/temp/' + req.params.path)
     fs.unlink(path, (err) => {
       if (err) {
         console.log(err)
-        return res.json({code:500,msg:'删除失败'})
+        return res.json({ code: 500, msg: '删除失败' })
       }
       console.log('文件已删除');
-      res.json({code:200,msg:'删除成功'})
+      res.json({ code: 200, msg: '删除成功' })
     });
   })
 })
 //添加音乐信息
-router.post('/addMusic',(req,res)=>{
+router.post('/addMusic', (req, res) => {
   jwt.verify(req.headers.token, '123456', (err) => {
     if (err) {
       return res.json({ code: 401, msg: 'token失效' })
     }
     const param = req.body
-    const path = resolve(__dirname,'../public/temp',param.lyricUrl)
-    new Promise((resolve,reject)=>{
-      const lyric = param.lyricUrl ? fs.readFileSync(path).toString():''
-      pool.query('insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?',[param.picUrl,lyric,param.musicUrl,param.musicName,param.musicAuthor],(err,data)=>{
-        if(err) {
+    const path = resolve(__dirname, '../public/temp', param.lyricUrl)
+    new Promise((resolve, reject) => {
+      const lyric = param.lyricUrl ? fs.readFileSync(path).toString() : ''
+      pool.query('insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?', [param.picUrl, lyric, param.musicUrl, param.musicName, param.musicAuthor], (err, data) => {
+        if (err) {
           console.log(err)
           return reject('服务器错误')
         }
         resolve('上传成功')
       })
-    }).then((data)=>{
-      res.json({code:200,msg:data})
-    },(err)=>{
-      res.json({code:500,msg:err})
-    }).finally(()=>{
-      fs.unlink(path,(err)=>{
-        if(err) console.log(err)
+    }).then((data) => {
+      res.json({ code: 200, msg: data })
+    }, (err) => {
+      res.json({ code: 500, msg: err })
+    }).finally(() => {
+      fs.unlink(path, (err) => {
+        if (err) console.log(err)
       })
     })
   })
 })
 //获取音乐信息
-router.get('/getMusicInfo',(req,res)=>{
-  pool.query('select * from music',(err,data)=>{
-    if(err){
+router.get('/getMusicInfo', (req, res) => {
+  pool.query('select * from music', (err, data) => {
+    if (err) {
       console.log(err)
-      res.json({code:500,msg:'获取音乐失败'})
+      res.json({ code: 500, msg: '获取音乐失败' })
     }
-    res.json({code:200,msg:'获取音乐成功',result:data})
+    res.json({ code: 200, msg: '获取音乐成功', result: data })
+  })
+})
+//网站浏览次数监控
+router.get('/viewTimes', (req, res) => {
+  pool.query('select * from siteInfo', (err, data) => {
+    if (err) {
+      console.log(err)
+      return res.json({ code: 200, VT: 0 })
+    }
+    const VT = data[0].VT
+    res.json({ code: 200, VT })
+    pool.query('update siteInfo set VT = ?', [VT + 1], (err) => {
+      console.log(err)
+    })
   })
 })
 module.exports = router;
