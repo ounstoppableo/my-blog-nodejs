@@ -11,6 +11,9 @@ dependencies:
   crypto-js:
     specifier: ^4.1.1
     version: registry.npmmirror.com/crypto-js@4.1.1
+  dayjs:
+    specifier: ^1.11.10
+    version: 1.11.10
   debug:
     specifier: ~2.6.9
     version: registry.npmmirror.com/debug@2.6.9
@@ -148,6 +151,10 @@ packages:
 
   /cssfilter@0.0.10:
     resolution: {integrity: sha512-FAaLDaplstoRsDR8XGYH51znUN0UY7nMc6Z9/fvE8EXGwvJE9hu7W2vHwx1+bd6gCYnln9nLbzxFTrcO9YQDZw==}
+    dev: false
+
+  /dayjs@1.11.10:
+    resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
     dev: false
 
   /express-fileupload@1.4.3:

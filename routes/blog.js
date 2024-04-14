@@ -17,6 +17,7 @@ const lodash = require('lodash')
 const validateInput = require('../utils/validateInput')
 const redisClient = require('../redis/connect')
 const getClientIp = require('../utils/getIp')
+const custom = require('../utils/log')
 const browserPriority = {
   1: 'Safari',
   2: 'Chrome',
@@ -25,12 +26,13 @@ const browserPriority = {
   5: 'Edg',
 }
 
+
 /* GET home page. */
 // router.get('/', function (req, res, next) {
 //   // fs.readFile('./assets/nodejs入门.md', (err, data) => {
 //   //   pool.query('INSERT INTO articledetail SET ?', { articleId: 1, articleContent: data }, function (error, results, fields) {
 //   //     if (error) throw error;
-//   //     console.log(results)
+//   //     custom.log(results)
 //   //   })
 //   // })
 //   pool.query('SELECT * FROM tags', (err, data) => {
@@ -95,7 +97,7 @@ router.post('/uploadImg', uploadImg.single('img'), (req, res, next) => {
       //没token则删除文件
       fs.unlink(path, (err) => {
         if (err) throw err;
-        console.log('文件已删除');
+        custom.log('文件已删除');
       });
       return res.json({ code: 401, msg: 'token失效' })
     }
@@ -114,7 +116,7 @@ router.post('/uploadFile', uploadFile.any(), (req, res, next) => {
       //没token删除文件
       fs.unlink(path, (err) => {
         if (err) throw err;
-        console.log('文件已删除');
+        custom.log('文件已删除');
       });
       return res.json({ code: 401, msg: 'token失效' })
     }
@@ -196,7 +198,7 @@ router.post('/addArticle', (req, res, next) => {
               //更新完删除本地存储
               fs.unlink(fileUrl, (err) => {
                 if (err) throw err;
-                console.log('文件已删除');
+                custom.log('文件已删除');
               });
             })
           })
@@ -219,7 +221,7 @@ router.get('/getTags', (req, res, next) => {
   }).then((data) => {
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 })
@@ -260,7 +262,7 @@ router.get('/getArticleInfo', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, data: articleInfoList })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 }
@@ -287,7 +289,7 @@ router.get('/getArticleInfo/:articleId', (req, res, next) => {
   pool.query('select VT from articleinfo where articleId = ?', [articleId], (err, data) => {
     const VT = data[0].VT
     pool.query('update articleinfo set VT=? where articleId = ?', [VT + 1, articleId], (err) => {
-      if (err) console.log(err)
+      if (err) custom.log(err)
     })
   })
   new Promise((resolve, reject) => {
@@ -324,7 +326,7 @@ router.get('/getArticleInfo/:articleId', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, data: articleInfoList[0] })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 }
@@ -398,7 +400,7 @@ router.post('/updateArticle', (req, res, next) => {
             //更新完删除本地存储
             fs.unlink(fileUrl, (err) => {
               if (err) throw err;
-              console.log('文件已删除');
+              custom.log('文件已删除');
             });
           })
         })
@@ -407,7 +409,7 @@ router.post('/updateArticle', (req, res, next) => {
     }).then(() => {
       res.json({ code: 200, msg: '更新成功' })
     }, (err) => {
-      console.log(err)
+      custom.log(err)
       res.json({ code: 500, msg: '服务器出错' })
     })
   })
@@ -423,7 +425,7 @@ router.get('/delArticle/:articleId', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, msg: '删除成功' })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 })
@@ -450,7 +452,7 @@ router.get('/articleInFolderCount', (req, res, next) => {
   }).then((data) => {
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器错误' })
   })
 })
@@ -497,7 +499,7 @@ router.get('/singleFolder/:folderId/:page/:limit', (req, res, next) => {
     data.articleInfos = data.articleInfos.slice(start, end)
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器错误' })
   })
 })
@@ -522,7 +524,7 @@ router.get('/articleInTagCount', (req, res, next) => {
   }).then((data) => {
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器错误' })
   })
 })
@@ -584,7 +586,7 @@ router.get('/singleTag/:tagName/:page/:limit', (req, res, next) => {
     data.articleInfos = data.articleInfos.slice(start, end)
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 })
@@ -621,7 +623,7 @@ router.post('/addMsgForArticle', (req, res, next) => {
       if (data[0]) avatar = data[0].avatar
       else {
         pool.query('insert into mailmapavatar set ?', { mail, avatar }, (err) => {
-          if (err) console.log(err)
+          if (err) custom.log(err)
         })
       }
       pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
@@ -632,7 +634,7 @@ router.post('/addMsgForArticle', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, msg: '添加成功' })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 })
@@ -675,7 +677,7 @@ router.get('/getMsgForArticle/:articleId/:page/:limit', (req, res, next) => {
   }).then((data) => {
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     if (err === 'page超出范围') res.json({ code: 400, msg: err })
     else res.json({ code: 500, msg: '服务器错误' })
   })
@@ -713,7 +715,7 @@ router.post('/addMsgForBoard', (req, res, next) => {
       if (data[0]) avatar = data[0].avatar
       else {
         pool.query('insert into mailmapavatar set ?', { mail, avatar }, (err) => {
-          if (err) console.log(err)
+          if (err) custom.log(err)
         })
       }
       pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
@@ -724,7 +726,7 @@ router.post('/addMsgForBoard', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, msg: '添加成功' })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 })
@@ -767,7 +769,7 @@ router.get('/getMsgForBoard/:page/:limit', (req, res, next) => {
   }).then((data) => {
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     if (err === 'page超出范围') res.json({ code: 400, msg: err })
     else res.json({ code: 500, msg: '服务器错误' })
   })
@@ -818,7 +820,7 @@ router.get('/getArticleInfoByPage/:page/:limit', (req, res, next) => {
     result.articleInfoList = articleInfoList.slice(start, end)
     res.json({ code: 200, data: result })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 }
@@ -839,7 +841,7 @@ router.get('/upvokeForArticle/:articleId/:msgId/:checked', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, msg: '点赞成功' })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器错误' })
   })
 })
@@ -859,7 +861,7 @@ router.get('/upvokeForBoard/:msgId/:checked', (req, res, next) => {
   }).then(() => {
     res.json({ code: 200, msg: '点赞成功' })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器错误' })
   })
 })
@@ -881,7 +883,7 @@ router.get('/preAndNextArticle/:articleId', (req, res, next) => {
   }).then((data) => {
     res.json({ code: 200, data })
   }, (err) => {
-    console.log(err)
+    custom.log(err)
     res.json({ code: 500, msg: '服务器出错' })
   })
 })
@@ -895,7 +897,7 @@ router.post('/uploadMusic', uploadMusic.single('music'), (req, res) => {
       //没token则删除文件
       fs.unlink(path, (err) => {
         if (err) throw err;
-        console.log('文件已删除');
+        custom.log('文件已删除');
       });
       return res.json({ code: 401, msg: 'token失效' })
     }
@@ -914,10 +916,10 @@ router.get('/deleteMusic/:path', (req, res) => {
     const path = resolve(__dirname, '../public/music', req.params.path)
     fs.unlink(path, (err) => {
       if (err) {
-        console.log(err)
+        custom.log(err)
         return res.json({ code: 500, msg: '删除失败' })
       }
-      console.log('文件已删除');
+      custom.log('文件已删除');
       res.json({ code: 200, msg: '删除成功' })
     });
   })
@@ -930,7 +932,7 @@ router.post('/uploadLyric', uploadFile.single('lyric'), (req, res) => {
       //没token则删除文件
       fs.unlink(path, (err) => {
         if (err) throw err;
-        console.log('文件已删除');
+        custom.log('文件已删除');
       });
       return res.json({ code: 401, msg: 'token失效' })
     }
@@ -947,10 +949,10 @@ router.get('/deleteLyric/:path', (req, res) => {
     const path = resolve(__dirname + '/../public/temp/' + req.params.path)
     fs.unlink(path, (err) => {
       if (err) {
-        console.log(err)
+        custom.log(err)
         return res.json({ code: 500, msg: '删除失败' })
       }
-      console.log('文件已删除');
+      custom.log('文件已删除');
       res.json({ code: 200, msg: '删除成功' })
     });
   })
@@ -967,7 +969,7 @@ router.post('/addMusic', (req, res) => {
       const lyric = param.lyricUrl ? fs.readFileSync(path).toString() : ''
       pool.query('insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?', [param.picUrl, lyric, param.musicUrl, param.musicName, param.musicAuthor], (err, data) => {
         if (err) {
-          console.log(err)
+          custom.log(err)
           return reject('服务器错误')
         }
         resolve('上传成功')
@@ -978,7 +980,7 @@ router.post('/addMusic', (req, res) => {
       res.json({ code: 500, msg: err })
     }).finally(() => {
       fs.unlink(path, (err) => {
-        if (err) console.log(err)
+        if (err) custom.log(err)
       })
     })
   })
@@ -987,7 +989,7 @@ router.post('/addMusic', (req, res) => {
 router.get('/getMusicInfo', (req, res) => {
   pool.query('select * from music', (err, data) => {
     if (err) {
-      console.log(err)
+      custom.log(err)
       res.json({ code: 500, msg: '获取音乐失败' })
     }
     res.json({ code: 200, msg: '获取音乐成功', result: data })
@@ -997,13 +999,13 @@ router.get('/getMusicInfo', (req, res) => {
 router.get('/viewTimes', (req, res) => {
   pool.query('select * from siteInfo', (err, data) => {
     if (err) {
-      console.log(err)
+      custom.log(err)
       return res.json({ code: 200, VT: 0 })
     }
     const VT = data[0].VT
     res.json({ code: 200, VT })
     pool.query('update siteInfo set VT = ?', [VT + 1], (err) => {
-      console.log(err)
+      custom.log(err)
     })
   })
 })
