@@ -51,6 +51,7 @@ redisClient.then((redisClient)=>{
 //登录验证
 router.post('/login',async (req, res, next) => {
   const ip = getClientIp(req)
+  custom.log(ip)
   let count = await redisClient.hGet('ip',ip)
   if(count >= 3) return res.json({ code: 402, msg: '请求次数过多！' })
   if(count){
