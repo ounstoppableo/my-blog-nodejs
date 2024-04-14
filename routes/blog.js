@@ -662,8 +662,9 @@ router.post('/addMsgForArticle', (req, res, next) => {
         }
       })
       const upvoke = 0
+      const isAdmin = 1
       new Promise((finalResolve, finalReject) => {
-          pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+          pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke,isAdmin }, (err) => {
             if (err) return finalReject(err)
             finalResolve()
           })
@@ -792,8 +793,9 @@ router.post('/addMsgForBoard', async (req, res, next) => {
         }
       })
       const upvoke = 0
+      const isAdmin = 1
       new Promise((finalResolve, finalReject) => {
-        pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+        pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke,isAdmin }, (err) => {
           if (err) return finalReject(err)
           finalResolve()
         })
