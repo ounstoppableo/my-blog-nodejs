@@ -593,51 +593,89 @@ router.get('/singleTag/:tagName/:page/:limit', (req, res, next) => {
 })
 //添加留言-文章
 router.post('/addMsgForArticle', (req, res, next) => {
-  let { name, content, fatherMsgId, articleId, mail, website } = req.body
-  name = validateInput(name)
-  content = validateInput(content)
-  mail =  validateInput(mail)
-  website = validateInput(website)
-  const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
-  let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
-  const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
-  const ua = req.headers['user-agent'].split(' ')
-  let browser = ''
-  ua.forEach(item => {
-    if (browser) {
-      let browserPri = 0
-      let itemPri = 0
-      Object.keys(browserPriority).forEach(key => {
-        if (browser.includes(browserPriority[key])) browserPri = +key
-        if (item.includes(browserPriority[key])) itemPri = +key
+  jwt.verify(req.headers.token, '123456',async (err) => {
+    if (err) {
+      let { name, content, fatherMsgId, articleId, mail, website } = req.body
+      name = validateInput(name)
+      content = validateInput(content)
+      mail =  validateInput(mail)
+      website = validateInput(website)
+      let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
+      const userInfoRow = await redisClient.get(mail)
+      if(userInfoRow) {
+        const userInfo = JSON.parse(userInfoRow)
+        if(userInfo.name !== name) return res.json({ code: 402, msg: '用户名与原邮箱不匹配！' })
+        avatar = userInfo.avatar
+      }else {
+        redisClient.set(mail,JSON.stringify({name,avatar}))
+      }
+      const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+      const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
+      const ua = req.headers['user-agent'].split(' ')
+      let browser = ''
+      ua.forEach(item => {
+        if (browser) {
+          let browserPri = 0
+          let itemPri = 0
+          Object.keys(browserPriority).forEach(key => {
+            if (browser.includes(browserPriority[key])) browserPri = +key
+            if (item.includes(browserPriority[key])) itemPri = +key
+          })
+          if (browserPri < itemPri) browser = item
+        } else {
+          browser = item
+        }
       })
-      if (browserPri < itemPri) browser = item
-    } else {
-      browser = item
+      const upvoke = 0
+      new Promise((finalResolve, finalReject) => {
+          pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+            if (err) return finalReject(err)
+            finalResolve()
+          })
+      }).then(() => {
+        res.json({ code: 200, msg: '添加成功' })
+      }, (err) => {
+        custom.log(err)
+        res.json({ code: 500, msg: '服务器出错' })
+      })
+    }else {
+      let { name, content, fatherMsgId, articleId, mail, website } = req.body
+      mail = '1263032107@qq.com'
+      name = 'unstoppable840'
+      website = '/'
+      let avatar = '/adminAvatar/avatar.jpeg'
+      const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+      const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
+      const ua = req.headers['user-agent'].split(' ')
+      let browser = ''
+      ua.forEach(item => {
+        if (browser) {
+          let browserPri = 0
+          let itemPri = 0
+          Object.keys(browserPriority).forEach(key => {
+            if (browser.includes(browserPriority[key])) browserPri = +key
+            if (item.includes(browserPriority[key])) itemPri = +key
+          })
+          if (browserPri < itemPri) browser = item
+        } else {
+          browser = item
+        }
+      })
+      const upvoke = 0
+      new Promise((finalResolve, finalReject) => {
+          pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+            if (err) return finalReject(err)
+            finalResolve()
+          })
+      }).then(() => {
+        res.json({ code: 200, msg: '添加成功' })
+      }, (err) => {
+        custom.log(err)
+        res.json({ code: 500, msg: '服务器出错' })
+      })
     }
   })
-  const upvoke = 0
-  new Promise((finalResolve, finalReject) => {
-    //查头像
-    pool.query('select * from mailmapavatar where mail=?', mail, (err, data) => {
-      if (err) return finalReject(err)
-      if (data[0]) avatar = data[0].avatar
-      else {
-        pool.query('insert into mailmapavatar set ?', { mail, avatar }, (err) => {
-          if (err) custom.log(err)
-        })
-      }
-      pool.query('insert into msgboardforarticle set ?', { name, content, fatherMsgId, articleId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
-        if (err) return finalReject(err)
-        finalResolve()
-      })
-    })
-  }).then(() => {
-    res.json({ code: 200, msg: '添加成功' })
-  }, (err) => {
-    custom.log(err)
-    res.json({ code: 500, msg: '服务器出错' })
-  })
+  
 })
 //获取留言-文章
 router.get('/getMsgForArticle/:articleId/:page/:limit', (req, res, next) => {
@@ -684,51 +722,88 @@ router.get('/getMsgForArticle/:articleId/:page/:limit', (req, res, next) => {
   })
 })
 //添加留言-留言板
-router.post('/addMsgForBoard', (req, res, next) => {
-  let { name, content, fatherMsgId, mail, website } = req.body
-  name = validateInput(name)
-  content = validateInput(content)
-  mail =  validateInput(mail)
-  website = validateInput(website)
-  const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
-  let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
-  const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
-  const ua = req.headers['user-agent'].split(' ')
-  let browser = ''
-  ua.forEach(item => {
-    if (browser) {
-      let browserPri = 0
-      let itemPri = 0
-      Object.keys(browserPriority).forEach(key => {
-        if (browser.includes(browserPriority[key])) browserPri = +key
-        if (item.includes(browserPriority[key])) itemPri = +key
-      })
-      if (browserPri < itemPri) browser = item
-    } else {
-      browser = item
-    }
-  })
-  const upvoke = 0
-  new Promise((finalResolve, finalReject) => {
-    //查头像
-    pool.query('select * from mailmapavatar where mail=?', mail, (err, data) => {
-      if (err) return finalReject(err)
-      if (data[0]) avatar = data[0].avatar
-      else {
-        pool.query('insert into mailmapavatar set ?', { mail, avatar }, (err) => {
-          if (err) custom.log(err)
+router.post('/addMsgForBoard', async (req, res, next) => {
+  jwt.verify(req.headers.token, '123456',async (err) => {
+    if (err) {
+        let { name, content, fatherMsgId, mail, website } = req.body
+        name = validateInput(name)
+        content = validateInput(content)
+        mail =  validateInput(mail)
+        website = validateInput(website)
+        let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
+        const userInfoRow = await redisClient.get(mail)
+        if(userInfoRow) {
+            const userInfo = JSON.parse(userInfoRow)
+        if(userInfo.name !== name) return res.json({ code: 402, msg: '用户名与原邮箱不匹配！' })
+            avatar = userInfo.avatar
+        }else {
+          redisClient.set(mail,JSON.stringify({name,avatar}))
+        }
+        const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+        const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
+        const ua = req.headers['user-agent'].split(' ')
+        let browser = ''
+        ua.forEach(item => {
+          if (browser) {
+            let browserPri = 0
+            let itemPri = 0
+            Object.keys(browserPriority).forEach(key => {
+              if (browser.includes(browserPriority[key])) browserPri = +key
+              if (item.includes(browserPriority[key])) itemPri = +key
+            })
+            if (browserPri < itemPri) browser = item
+          } else {
+            browser = item
+          }
         })
-      }
-      pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
-        if (err) return finalReject(err)
-        finalResolve()
+        const upvoke = 0
+        new Promise((finalResolve, finalReject) => {
+          pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+            if (err) return finalReject(err)
+            finalResolve()
+          })
+        }).then(() => {
+          res.json({ code: 200, msg: '添加成功' })
+        }, (err) => {
+          custom.log(err)
+          res.json({ code: 500, msg: '服务器出错' })
+        })
+    }else {
+      let { name, content, fatherMsgId, mail, website } = req.body
+      mail = '1263032107@qq.com'
+      name = 'unstoppable840'
+      website = '/'
+      let avatar = '/adminAvatar/avatar.jpeg'
+      const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
+      const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
+      const ua = req.headers['user-agent'].split(' ')
+      let browser = ''
+      ua.forEach(item => {
+        if (browser) {
+          let browserPri = 0
+          let itemPri = 0
+          Object.keys(browserPriority).forEach(key => {
+            if (browser.includes(browserPriority[key])) browserPri = +key
+            if (item.includes(browserPriority[key])) itemPri = +key
+          })
+          if (browserPri < itemPri) browser = item
+        } else {
+          browser = item
+        }
       })
-    })
-  }).then(() => {
-    res.json({ code: 200, msg: '添加成功' })
-  }, (err) => {
-    custom.log(err)
-    res.json({ code: 500, msg: '服务器出错' })
+      const upvoke = 0
+      new Promise((finalResolve, finalReject) => {
+        pool.query('insert into msgboardforall set ?', { name, content, fatherMsgId, mail, website, avatar, subTime, device, browser, upvoke }, (err) => {
+          if (err) return finalReject(err)
+          finalResolve()
+        })
+      }).then(() => {
+        res.json({ code: 200, msg: '添加成功' })
+      }, (err) => {
+        custom.log(err)
+        res.json({ code: 500, msg: '服务器出错' })
+      })
+    }
   })
 })
 //获取留言-留言板
