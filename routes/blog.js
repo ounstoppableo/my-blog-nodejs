@@ -15,6 +15,7 @@ const mdImgtagToHtmlImgtag = require('../utils/mdImgtagToHtmlImgtag')
 const { resolve } = require('path')
 const lodash = require('lodash')
 const validateInput = require('../utils/validateInput')
+const redisClient = require('../redis/connect')
 const browserPriority = {
   1: 'Safari',
   2: 'Chrome',
@@ -43,6 +44,7 @@ const browserPriority = {
 //     res.json(tags);
 //   })
 // });
+redisClient.then((redisClient)=>{
 //登录验证
 router.post('/login', (req, res, next) => {
   pool.query('SELECT * FROM user', (err, data) => {
@@ -995,4 +997,7 @@ router.get('/viewTimes', (req, res) => {
     })
   })
 })
+})
+
+
 module.exports = router;

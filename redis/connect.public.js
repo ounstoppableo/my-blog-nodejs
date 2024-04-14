@@ -1,12 +1,11 @@
-import { createClient } from 'redis';
-import {createPool} from 'generic-pool';
+const redis = require('redis')
 
 // 创建 Redis 客户端
-const redisClient = createClient({
+const redisClient = redis.createClient({
   url: 'redis://localhost:6379',
   database: 1,
 }).on('error', err =>{ 
   console.log('Redis Client Error', err);},
 ).connect();
 
-export {redisClient};
+module.exports = redisClient;
