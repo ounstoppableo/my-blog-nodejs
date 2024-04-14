@@ -16,6 +16,7 @@ const { resolve } = require('path')
 const lodash = require('lodash')
 const validateInput = require('../utils/validateInput')
 const redisClient = require('../redis/connect')
+const getClientIp = require('../utils/getIp')
 const browserPriority = {
   1: 'Safari',
   2: 'Chrome',
@@ -46,7 +47,16 @@ const browserPriority = {
 // });
 redisClient.then((redisClient)=>{
 //登录验证
-router.post('/login', (req, res, next) => {
+router.post('/login',async (req, res, next) => {
+  const ip = getClientIp(req)
+  let count = await redisClient.hGet('ip',ip)
+  if(count >= 3) return res.json({ code: 402, msg: '请求次数过多！' })
+  if(count){
+    redisClient.hSet('ip',ip,+count+1)
+  }else{
+    count = 1
+    redisClient.hSet('ip',ip,count)
+  }
   pool.query('SELECT * FROM user', (err, data) => {
     if (err) return res.json({ code: 500, msg: '服务器出错误!' })
     const username = sha256(data[0].username).toString()
@@ -58,7 +68,7 @@ router.post('/login', (req, res, next) => {
       }, '123456')
       res.json({ code: 200, token: token })
     } else {
-      res.json({ code: 402, meg: "用户名或密码错误" })
+      res.json({ code: 402, meg: `用户名或密码错误，您还有${3 - count}次机会！` })
     }
   })
 })
