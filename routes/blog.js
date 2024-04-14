@@ -14,6 +14,7 @@ const router = express.Router();
 const mdImgtagToHtmlImgtag = require('../utils/mdImgtagToHtmlImgtag')
 const { resolve } = require('path')
 const lodash = require('lodash')
+const validateInput = require('../utils/validateInput')
 const browserPriority = {
   1: 'Safari',
   2: 'Chrome',
@@ -577,7 +578,11 @@ router.get('/singleTag/:tagName/:page/:limit', (req, res, next) => {
 })
 //添加留言-文章
 router.post('/addMsgForArticle', (req, res, next) => {
-  const { name, content, fatherMsgId, articleId, mail, website } = req.body
+  let { name, content, fatherMsgId, articleId, mail, website } = req.body
+  name = validateInput(name)
+  content = validateInput(content)
+  mail =  validateInput(mail)
+  website = validateInput(website)
   const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
   let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
   const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]
@@ -665,7 +670,11 @@ router.get('/getMsgForArticle/:articleId/:page/:limit', (req, res, next) => {
 })
 //添加留言-留言板
 router.post('/addMsgForBoard', (req, res, next) => {
-  const { name, content, fatherMsgId, mail, website } = req.body
+  let { name, content, fatherMsgId, mail, website } = req.body
+  name = validateInput(name)
+  content = validateInput(content)
+  mail =  validateInput(mail)
+  website = validateInput(website)
   const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss')
   let avatar = `/avatar/${Math.floor(Math.random() * 9) + 1}.jpg`
   const device = req.headers['user-agent'].match(/\(.*?\)/)[0].slice(1).split(';')[0]

@@ -1,2 +1,3 @@
 node_modules
 **/pool.js
+**/redis/connect.js
