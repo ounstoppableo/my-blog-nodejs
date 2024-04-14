@@ -71,7 +71,7 @@ router.post('/login',async (req, res, next) => {
       redisClient.del('ip:'+ip)
       res.json({ code: 200, token: token })
     } else {
-      res.json({ code: 402, meg: `用户名或密码错误，您还有${3 - count}次机会！` })
+      res.json({ code: 402, msg: `用户名或密码错误，您还有${3 - count}次机会！` })
     }
   })
 })
