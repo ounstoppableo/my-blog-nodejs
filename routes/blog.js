@@ -51,14 +51,13 @@ redisClient.then((redisClient)=>{
 //登录验证
 router.post('/login',async (req, res, next) => {
   const ip = getClientIp(req)
-  custom.log(ip)
-  let count = await redisClient.hGet('ip',ip)
+  let count = await redisClient.get('ip:'+ip)
   if(count >= 3) return res.json({ code: 402, msg: '请求次数过多！' })
   if(count){
-    redisClient.hSet('ip',ip,+count+1)
+    redisClient.set('ip:'+ip,+count+1,{EX:60*60*24})
   }else{
     count = 1
-    redisClient.hSet('ip',ip,count)
+    redisClient.set('ip:'+ip,count)
   }
   pool.query('SELECT * FROM user', (err, data) => {
     if (err) return res.json({ code: 500, msg: '服务器出错误!' })
@@ -69,6 +68,7 @@ router.post('/login',async (req, res, next) => {
         exp: Math.floor(Date.now() / 1000) + (30 * 60),
         data: username
       }, '123456')
+      redisClient.del('ip:'+ip)
       res.json({ code: 200, token: token })
     } else {
       res.json({ code: 402, meg: `用户名或密码错误，您还有${3 - count}次机会！` })
