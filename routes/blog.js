@@ -52,7 +52,7 @@ redisClient.then((redisClient)=>{
 router.post('/login',async (req, res, next) => {
   const ip = getClientIp(req)
   let count = await redisClient.get('ip:'+ip)
-  if(count >= 3) return res.json({ code: 402, msg: '请求次数过多！' })
+  if(count && count >= 3) return res.json({ code: 402, msg: '请求次数过多！' })
   if(count){
     redisClient.set('ip:'+ip,+count+1,{EX:60*60*24})
   }else{
