@@ -4,6 +4,7 @@ const pool = require('../../mysql/pool');
 const moment = require('moment');
 const mdImgtagToHtmlImgtag = require('../../utils/mdImgtagToHtmlImgtag');
 const { rdmRgbColor } = require('../../utils/randomColor');
+const { readingTime } = require('reading-time-estimator');
 const custom = require('../../utils/log');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
@@ -213,7 +214,8 @@ router.get('/getArticle/:articleId', (req, res, next) => {
     );
   }).then(
     (data) => {
-      res.json({ code: 200, data });
+      const result = readingTime(data.articleContent, 225, 'cn');
+      res.json({ code: 200, data: Object.assign(data, result) });
     },
     (err) => {
       res.json({ code: 500, msg: '服务器错误' });
@@ -432,25 +434,28 @@ router.post('/updateArticle', (req, res, next) => {
 });
 //删除文章
 router.get('/delArticle/:articleId', (req, res, next) => {
-  new Promise((resolve, reject) => {
-    const { articleId } = req.params;
-    pool.query(
-      'delete from articleinfo where articleId = ?',
-      articleId,
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) return res.json({ code: 401, msg: 'token失效' });
+    new Promise((resolve, reject) => {
+      const { articleId } = req.params;
+      pool.query(
+        'delete from articleinfo where articleId = ?',
+        articleId,
+        (err) => {
+          if (err) return reject(err);
+          resolve(1);
+        },
+      );
+    }).then(
+      () => {
+        res.json({ code: 200, msg: '删除成功' });
+      },
       (err) => {
-        if (err) return reject(err);
-        resolve(1);
+        custom.log(err);
+        res.json({ code: 500, msg: '服务器出错' });
       },
     );
-  }).then(
-    () => {
-      res.json({ code: 200, msg: '删除成功' });
-    },
-    (err) => {
-      custom.log(err);
-      res.json({ code: 500, msg: '服务器出错' });
-    },
-  );
+  });
 });
 //获取文件夹分类下的文章数量
 router.get('/articleInFolderCount', (req, res, next) => {
@@ -755,15 +760,18 @@ router.get('/preAndNextArticle/:articleId', (req, res, next) => {
   new Promise((finalResolve, finalReject) => {
     const { articleId } = req.params;
     pool.query(
-      'select articleId,title from articleinfo order by lastModifyTime DESC',
+      'select articleId,title,backImgUrl from articleinfo order by lastModifyTime DESC',
       (err, data) => {
         if (err) return finalReject(err);
         const index = data.findIndex((item) => item.articleId === articleId);
         const result = {
           pre: index > 0 ? data[index - 1].articleId : '',
           preTitle: index > 0 ? data[index - 1].title : '',
+          prebackImgUrl: index > 0 ? data[index - 1].backImgUrl : '',
           next: index < data.length - 1 ? data[index + 1].articleId : '',
           nextTitle: index < data.length - 1 ? data[index + 1].title : '',
+          nextbackImgUrl:
+            index < data.length - 1 ? data[index + 1].backImgUrl : '',
         };
         finalResolve(result);
       },
