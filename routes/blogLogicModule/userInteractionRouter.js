@@ -6,6 +6,7 @@ const moment = require('moment');
 const custom = require('../../utils/log');
 const redisClient = require('../../redis/connect');
 const dayjs = require('dayjs');
+const mailTransporter = require('../../mail/mail');
 const router = express.Router();
 const browserPriority = {
   1: 'Safari',
@@ -386,6 +387,16 @@ redisClient.then((redisClient) => {
         }).then(
           () => {
             res.json({ code: 200, msg: '添加成功' });
+            mailTransporter
+              .sendMail({
+                from: '"你的博客 👻"',
+                to: 'unstoppable840@gmail.com',
+                subject: '你的博客收到一条新留言🎊',
+                text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
+              })
+              .catch((err) => {
+                console.log(err);
+              });
           },
           (err) => {
             custom.log(err);
@@ -444,6 +455,16 @@ redisClient.then((redisClient) => {
         }).then(
           () => {
             res.json({ code: 200, msg: '添加成功' });
+            mailTransporter
+              .sendMail({
+                from: '"你的博客 👻"',
+                to: 'unstoppable840@gmail.com',
+                subject: '你的博客收到一条新留言🎊',
+                text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
+              })
+              .catch((err) => {
+                console.log(err);
+              });
           },
           (err) => {
             custom.log(err);
@@ -695,6 +716,19 @@ redisClient.then((redisClient) => {
         res.json({ code: 500, msg: '服务器错误' });
       },
     );
+  });
+
+  //获取最新留言
+  router.get('/getNewMsg/:limit', (req, res, next) => {
+    const { limit } = req.params;
+    const sql = `SELECT msgId, name, content, subTime FROM msgboardforall WHERE audit = 1 UNION SELECT msgId, name, content, subTime FROM msgboardforarticle WHERE audit = 1 ORDER BY subTime DESC LIMIT ${limit};`;
+    pool.query(sql, (err, data) => {
+      if (err) {
+        console.log(err);
+        res.json({ code: 500, msg: '服务器出错' });
+      }
+      res.json({ code: 200, msg: '请求成功', data });
+    });
   });
 });
 

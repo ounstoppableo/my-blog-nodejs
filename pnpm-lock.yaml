@@ -53,6 +53,9 @@ importers:
       mysql:
         specifier: ^2.18.1
         version: https://registry.npmmirror.com/mysql/-/mysql-2.18.1.tgz
+      nodemailer:
+        specifier: ^6.9.15
+        version: 6.9.15
       nodemon:
         specifier: ^3.0.1
         version: https://registry.npmmirror.com/nodemon/-/nodemon-3.0.1.tgz
@@ -532,6 +535,10 @@ packages:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==, tarball: https://registry.npmmirror.com/negotiator/-/negotiator-0.6.3.tgz}
     version: 0.6.3
     engines: {node: '>= 0.6'}
+
+  nodemailer@6.9.15:
+    resolution: {integrity: sha512-AHf04ySLC6CIfuRtRiEYtGEXgRfa6INgWGluDhnxTZhHSKvrBu7lc1VVchQ0d8nPc4cFaZoPq8vkyNoZr0TpGQ==}
+    engines: {node: '>=6.0.0'}
 
   nodemon@https://registry.npmmirror.com/nodemon/-/nodemon-3.0.1.tgz:
     resolution: {integrity: sha512-g9AZ7HmkhQkqXkRc20w+ZfQ73cHLbE8hnPbtaFbFtCumZsjyMhKk9LajQ07U5Ux28lvFjZ5X7HvWR1xzU8jHVw==, tarball: https://registry.npmmirror.com/nodemon/-/nodemon-3.0.1.tgz}
@@ -1153,6 +1160,8 @@ snapshots:
       sqlstring: https://registry.npmmirror.com/sqlstring/-/sqlstring-2.3.1.tgz
 
   negotiator@https://registry.npmmirror.com/negotiator/-/negotiator-0.6.3.tgz: {}
+
+  nodemailer@6.9.15: {}
 
   nodemon@https://registry.npmmirror.com/nodemon/-/nodemon-3.0.1.tgz:
     dependencies:

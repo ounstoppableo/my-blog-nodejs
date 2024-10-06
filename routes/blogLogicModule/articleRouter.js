@@ -8,6 +8,7 @@ const { readingTime } = require('reading-time-estimator');
 const custom = require('../../utils/log');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const dayjs = require('dayjs');
 const router = express.Router();
 const publicPath = __dirname + '/../../public';
 //添加文章
@@ -779,6 +780,119 @@ router.get('/preAndNextArticle/:articleId', (req, res, next) => {
   }).then(
     (data) => {
       res.json({ code: 200, data });
+    },
+    (err) => {
+      custom.log(err);
+      res.json({ code: 500, msg: '服务器出错' });
+    },
+  );
+});
+
+//置顶文章
+router.get('/toTopArticle/:articleId', (req, res, next) => {
+  const { articleId } = req.params;
+  if (!articleId) return res.json({ code: 400, msg: '请传入正确的articleId!' });
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) return res.json({ code: 401, msg: 'token失效' });
+    new Promise((resolve, reject) => {
+      pool.query(
+        'update articleinfo set toTop = ? where articleId = ? ',
+        [dayjs(Date.now()).format('YYYY-MM-DD hh:mm:ss'), articleId],
+        (err) => {
+          if (err) return reject(err);
+          resolve(1);
+        },
+      );
+    }).then(
+      () => {
+        res.json({ code: 200, msg: '置顶成功' });
+      },
+      (err) => {
+        custom.log(err);
+        res.json({ code: 500, msg: '服务器出错' });
+      },
+    );
+  });
+});
+//取消置顶文章
+router.get('/cancelTopArticle/:articleId', (req, res, next) => {
+  const { articleId } = req.params;
+  if (!articleId) return res.json({ code: 400, msg: '请传入正确的articleId!' });
+  jwt.verify(req.headers.token, '123456', (err) => {
+    if (err) return res.json({ code: 401, msg: 'token失效' });
+    new Promise((resolve, reject) => {
+      pool.query(
+        'update articleinfo set toTop = ? where articleId = ? ',
+        ['1970-01-01 08:00:01', articleId],
+        (err) => {
+          if (err) return reject(err);
+          resolve(1);
+        },
+      );
+    }).then(
+      () => {
+        res.json({ code: 200, msg: '取消置顶成功' });
+      },
+      (err) => {
+        custom.log(err);
+        res.json({ code: 500, msg: '服务器出错' });
+      },
+    );
+  });
+});
+//获取置顶文章
+router.get('/getTopArticleInfo', (req, res, next) => {
+  const articleInfoList = [];
+  new Promise((resolve, reject) => {
+    //获取文章基本信息
+    const sql = `select * from articleinfo where toTop !='1970-01-01 08:00:01' order by toTop DESC`;
+    pool.query(sql, (err, dataForArticleinfo) => {
+      if (err) return reject(err);
+      const promiseArr = dataForArticleinfo.map((item, index) => {
+        articleInfoList.push(item);
+        //获取文章标签
+        return new Promise((resolve) => {
+          pool.query(
+            'select folderName from folder where folderId = ?',
+            [item.folderId],
+            (err, dataForfolder) => {
+              if (err) return reject(err);
+              articleInfoList[index].folderName = dataForfolder[0].folderName;
+              pool.query(
+                'select * from articletotag where articleId = ?',
+                [item.articleId],
+                (err, dataForArticletotag) => {
+                  if (err) return reject(err);
+                  articleInfoList[index].tags = [];
+                  const promiseArr = dataForArticletotag.map((item) => {
+                    return new Promise((resolve) => {
+                      pool.query(
+                        'select * from tags where tagName = ?',
+                        [item.tagName],
+                        (err, dataForTags) => {
+                          if (err) return reject(err);
+                          articleInfoList[index].tags.push(dataForTags[0]);
+                          resolve(1);
+                        },
+                      );
+                    });
+                  });
+                  Promise.all(promiseArr).then(() => {
+                    resolve(1);
+                  });
+                },
+              );
+            },
+          );
+        });
+      });
+      Promise.all(promiseArr).then(() => {
+        resolve(1);
+      });
+    });
+  }).then(
+    () => {
+      res.json({ code: 200, data: articleInfoList });
     },
     (err) => {
       custom.log(err);
