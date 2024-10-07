@@ -6,7 +6,7 @@ const moment = require('moment');
 const custom = require('../../utils/log');
 const redisClient = require('../../redis/connect');
 const dayjs = require('dayjs');
-const mailTransporter = require('../../mail/mail');
+// const mailTransporter = require('../../mail/mail');
 const router = express.Router();
 const browserPriority = {
   1: 'Safari',
@@ -387,16 +387,16 @@ redisClient.then((redisClient) => {
         }).then(
           () => {
             res.json({ code: 200, msg: '添加成功' });
-            mailTransporter
-              .sendMail({
-                from: '"你的博客 👻"',
-                to: 'unstoppable840@gmail.com',
-                subject: '你的博客收到一条新留言🎊',
-                text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
-              })
-              .catch((err) => {
-                console.log(err);
-              });
+            // mailTransporter
+            //   .sendMail({
+            //     from: '"你的博客 👻"',
+            //     to: 'unstoppable840@gmail.com',
+            //     subject: '你的博客收到一条新留言🎊',
+            //     text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
+            //   })
+            //   .catch((err) => {
+            //     console.log(err);
+            //   });
           },
           (err) => {
             custom.log(err);
@@ -455,16 +455,16 @@ redisClient.then((redisClient) => {
         }).then(
           () => {
             res.json({ code: 200, msg: '添加成功' });
-            mailTransporter
-              .sendMail({
-                from: '"你的博客 👻"',
-                to: 'unstoppable840@gmail.com',
-                subject: '你的博客收到一条新留言🎊',
-                text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
-              })
-              .catch((err) => {
-                console.log(err);
-              });
+            // mailTransporter
+            //   .sendMail({
+            //     from: '"你的博客 👻"',
+            //     to: 'unstoppable840@gmail.com',
+            //     subject: '你的博客收到一条新留言🎊',
+            //     text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
+            //   })
+            //   .catch((err) => {
+            //     console.log(err);
+            //   });
           },
           (err) => {
             custom.log(err);
