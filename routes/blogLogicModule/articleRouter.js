@@ -9,8 +9,11 @@ const custom = require('../../utils/log');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const dayjs = require('dayjs');
+const mailTransporter = require('../../mail/mail');
+const generateMailTemplate = require('../../utils/generateMailTemplate');
 const router = express.Router();
 const publicPath = __dirname + '/../../public';
+const blogUrl = 'https://www.unstoppable840.cn';
 //添加文章
 router.post('/addArticle', (req, res, next) => {
   jwt.verify(req.headers.token, '123456', (err) => {
@@ -110,6 +113,29 @@ router.post('/addArticle', (req, res, next) => {
     }).then(
       () => {
         res.json({ code: 200, msg: '添加成功' });
+        pool.query('select * from subscribeList', (err, data) => {
+          if (err) {
+            return custom.log(err);
+          }
+          data.forEach((item) => {
+            const { mail } = item;
+            mailTransporter
+              .sendMail({
+                from: '1263032107@qq.com',
+                to: mail,
+                subject: `unustoppable840's blog 更新了文章🎊，快来看看吧~~`,
+                html: generateMailTemplate(
+                  title,
+                  mail,
+                  description,
+                  blogUrl + '/article/' + articleId,
+                ),
+              })
+              .catch((err) => {
+                custom.log(err);
+              });
+          });
+        });
       },
       () => {
         res.json({ code: 500, msg: '服务器出错' });
@@ -425,6 +451,29 @@ router.post('/updateArticle', (req, res, next) => {
     }).then(
       () => {
         res.json({ code: 200, msg: '更新成功' });
+        pool.query('select * from subscribeList', (err, data) => {
+          if (err) {
+            return custom.log(err);
+          }
+          data.forEach((item) => {
+            const { mail } = item;
+            mailTransporter
+              .sendMail({
+                from: '1263032107@qq.com',
+                to: mail,
+                subject: `unustoppable840's blog 更新了文章🎊，快来看看吧~~`,
+                html: generateMailTemplate(
+                  title,
+                  mail,
+                  description,
+                  blogUrl + '/article/' + articleId,
+                ),
+              })
+              .catch((err) => {
+                custom.log(err);
+              });
+          });
+        });
       },
       (err) => {
         custom.log(err);

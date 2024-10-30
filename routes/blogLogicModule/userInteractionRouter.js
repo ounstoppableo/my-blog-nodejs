@@ -6,7 +6,7 @@ const moment = require('moment');
 const custom = require('../../utils/log');
 const redisClient = require('../../redis/connect');
 const dayjs = require('dayjs');
-// const mailTransporter = require('../../mail/mail');
+const mailTransporter = require('../../mail/mail');
 const router = express.Router();
 const browserPriority = {
   1: 'Safari',
@@ -58,29 +58,44 @@ redisClient.then((redisClient) => {
         });
         const upvoke = 0;
         new Promise((finalResolve, finalReject) => {
-          pool.query(
-            'insert into msgboardforarticle set ?',
-            {
-              name,
-              content,
-              fatherMsgId,
-              articleId,
-              mail,
-              website,
-              avatar,
-              subTime,
-              device,
-              browser,
-              upvoke,
-            },
-            (err) => {
-              if (err) return finalReject(err);
-              finalResolve();
-            },
-          );
+          const data = {
+            name,
+            content,
+            fatherMsgId,
+            articleId,
+            mail,
+            website,
+            avatar,
+            subTime,
+            device,
+            browser,
+            upvoke,
+          };
+          pool.query('insert into msgboardforarticle set ?', data, (err) => {
+            if (err) return finalReject(err);
+            finalResolve(data);
+          });
         }).then(
-          () => {
+          (info) => {
             res.json({ code: 200, msg: '添加成功' });
+            pool.query(
+              'select title from articleinfo where articleId = ?',
+              info.articleId,
+              (err, data) => {
+                if (err) return custom.log(err);
+                mailTransporter
+                  .sendMail({
+                    from: '1263032107@qq.com',
+                    to: '1263032107@qq.com',
+                    subject: '你的博客收到一条新留言🎊',
+                    html: `你的博客『${data[0].title}』文章下收到一条新留言，快去审核吧~~\n
+                    <a href="https://www.unstoppable840.cn/article/${info.articleId}">点我去往留言页面</a>`,
+                  })
+                  .catch((err) => {
+                    custom.log(err);
+                  });
+              },
+            );
           },
           (err) => {
             custom.log(err);
@@ -116,30 +131,45 @@ redisClient.then((redisClient) => {
         const upvoke = 0;
         const isAdmin = 1;
         new Promise((finalResolve, finalReject) => {
-          pool.query(
-            'insert into msgboardforarticle set ?',
-            {
-              name,
-              content,
-              fatherMsgId,
-              articleId,
-              mail,
-              website,
-              avatar,
-              subTime,
-              device,
-              browser,
-              upvoke,
-              isAdmin,
-            },
-            (err) => {
-              if (err) return finalReject(err);
-              finalResolve();
-            },
-          );
+          const data = {
+            name,
+            content,
+            fatherMsgId,
+            articleId,
+            mail,
+            website,
+            avatar,
+            subTime,
+            device,
+            browser,
+            upvoke,
+            isAdmin,
+          };
+          pool.query('insert into msgboardforarticle set ?', data, (err) => {
+            if (err) return finalReject(err);
+            finalResolve(data);
+          });
         }).then(
-          () => {
+          (info) => {
             res.json({ code: 200, msg: '添加成功' });
+            pool.query(
+              'select title from articleinfo where articleId = ?',
+              info.articleId,
+              (err, data) => {
+                if (err) return custom.log(err);
+                mailTransporter
+                  .sendMail({
+                    from: '1263032107@qq.com',
+                    to: '1263032107@qq.com',
+                    subject: '你的博客收到一条新留言🎊',
+                    html: `你的博客『${data[0].title}』文章下收到一条新留言，快去审核吧~~\n
+                    <a href="https://www.unstoppable840.cn/article/${info.articleId}">点我去往留言页面</a>`,
+                  })
+                  .catch((err) => {
+                    custom.log(err);
+                  });
+              },
+            );
           },
           (err) => {
             custom.log(err);
@@ -387,16 +417,18 @@ redisClient.then((redisClient) => {
         }).then(
           () => {
             res.json({ code: 200, msg: '添加成功' });
-            // mailTransporter
-            //   .sendMail({
-            //     from: '"你的博客 👻"',
-            //     to: 'unstoppable840@gmail.com',
-            //     subject: '你的博客收到一条新留言🎊',
-            //     text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
-            //   })
-            //   .catch((err) => {
-            //     console.log(err);
-            //   });
+            mailTransporter
+              .sendMail({
+                from: '1263032107@qq.com',
+                to: '1263032107@qq.com',
+                subject: '你的博客收到一条新留言🎊',
+                html: `你的博客『留言板』下收到一条新留言，快去审核吧~~\n
+                  <a href="https://www.unstoppable840.cn/msgboard">点我去往留言页面</a>
+                `,
+              })
+              .catch((err) => {
+                custom.log(err);
+              });
           },
           (err) => {
             custom.log(err);
@@ -455,16 +487,18 @@ redisClient.then((redisClient) => {
         }).then(
           () => {
             res.json({ code: 200, msg: '添加成功' });
-            // mailTransporter
-            //   .sendMail({
-            //     from: '"你的博客 👻"',
-            //     to: 'unstoppable840@gmail.com',
-            //     subject: '你的博客收到一条新留言🎊',
-            //     text: '你的博客『留言板』下收到一条新留言，快去审核吧~~',
-            //   })
-            //   .catch((err) => {
-            //     console.log(err);
-            //   });
+            mailTransporter
+              .sendMail({
+                from: '1263032107@qq.com',
+                to: '1263032107@qq.com',
+                subject: '你的博客收到一条新留言🎊',
+                html: `你的博客『留言板』下收到一条新留言，快去审核吧~~\n
+                <a href="https://www.unstoppable840.cn/msgboard">点我去往留言页面</a>
+              `,
+              })
+              .catch((err) => {
+                custom.log(err);
+              });
           },
           (err) => {
             custom.log(err);
@@ -724,11 +758,31 @@ redisClient.then((redisClient) => {
     const sql = `SELECT msgId, name, content, subTime FROM msgboardforall WHERE audit = 1 UNION SELECT msgId, name, content, subTime FROM msgboardforarticle WHERE audit = 1 ORDER BY subTime DESC LIMIT ${limit};`;
     pool.query(sql, (err, data) => {
       if (err) {
-        console.log(err);
+        custom.log(err);
         res.json({ code: 500, msg: '服务器出错' });
       }
       res.json({ code: 200, msg: '请求成功', data });
     });
+  });
+
+  //订阅功能
+  router.post('/subscribe', (req, res, next) => {
+    const { mail } = req.body;
+    pool.query(
+      'insert into subscribeList(mail) values(?)',
+      mail,
+      (err, data) => {
+        if (err) {
+          if (err.code === 'ER_DUP_ENTRY') {
+            return res.json({ code: 201, msg: '请不要重复订阅o~' });
+          } else {
+            console.log(err);
+            return res.json({ code: 500, msg: '服务器出错' });
+          }
+        }
+        res.json({ code: 200, msg: '订阅成功~' });
+      },
+    );
   });
 });
 
