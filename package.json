@@ -30,6 +30,7 @@
     "nodemon": "^3.0.1",
     "reading-time-estimator": "^1.11.0",
     "redis": "^4.6.13",
+    "redisearch": "^1.0.3",
     "socks-proxy-agent": "^8.0.4",
     "uuid": "^9.0.1",
     "xss": "^1.0.15"

@@ -9,26 +9,97 @@ var debug = require('debug')('my-blog-nodejs:server');
 var https = require('https');
 var fs = require('fs');
 var path = require('path');
-var logger = require('jet-logger')
+var logger = require('jet-logger');
+const redisClient = require('../redis/connect');
+const pool = require('../mysql/pool');
 
 /**
  * Get port from environment and store in Express.
  */
 
-const SERVER_START_MSG = ('Express server started on port: ' + 
-  (3000).toString());
+const SERVER_START_MSG = 'Express server started on port: ' + (3000).toString();
 
 /**
  * Create HTTP server.
  */
-const httpsServer = https.createServer({
-  key: fs.readFileSync(path.resolve(__dirname,'../cert/server.key')),
-  cert: fs.readFileSync(path.resolve(__dirname,'../cert/server.crt')),
-}, app);
+const httpsServer = https.createServer(
+  {
+    key: fs.readFileSync(path.resolve(__dirname, '../cert/server.key')),
+    cert: fs.readFileSync(path.resolve(__dirname, '../cert/server.crt')),
+  },
+  app,
+);
 
-
-
-
-httpsServer.listen(3000,() => logger.default.info(SERVER_START_MSG));
-
-
+redisClient.then((redisClient) => {
+  pool.query('select * from articleinfo', (err, articleinfos) => {
+    if (err) {
+      return console.log(err);
+    }
+    const promises = articleinfos.map((articleInfo) => {
+      return Promise.all([
+        new Promise((resovle, reject) => {
+          pool.query(
+            'select folderName from folder where folderId = ?',
+            articleInfo.folderId,
+            (err, data) => {
+              if (err) return reject(err);
+              articleInfo.folderName = data.folderName;
+              resovle(1);
+            },
+          );
+        }),
+        new Promise((resovle, reject) => {
+          pool.query(
+            'select tagName from articletotag where articleId = ?',
+            articleInfo.articleId,
+            (err, tags) => {
+              if (err) return reject(err);
+              articleInfo.tags = tags;
+              Promise.all(
+                tags.map((tag) => {
+                  return new Promise(
+                    (resovleForTagQuery, rejectForTagQuery) => {
+                      pool.query(
+                        'select tagColor from tags where tagName = ?',
+                        tag.tagName,
+                        (err, tagColor) => {
+                          if (err) return rejectForTagQuery(err);
+                          tag.tagColor = tagColor[0].tagColor;
+                          resovleForTagQuery(1);
+                        },
+                      );
+                    },
+                  );
+                }),
+              )
+                .then(() => {
+                  resovle(1);
+                })
+                .catch((err) => reject(err));
+            },
+          );
+        }),
+      ]);
+    });
+    Promise.all(promises)
+      .then(() => {
+        const promises = articleinfos.map((articleInfo) => {
+          return redisClient.HSET(
+            'articleInfo',
+            articleInfo.articleId,
+            JSON.stringify(articleInfo),
+          );
+        });
+        Promise.all(promises)
+          .then(() => {
+            httpsServer.listen(3000, () =>
+              logger.default.info(SERVER_START_MSG),
+            );
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => console.log(err));
+  });
+});

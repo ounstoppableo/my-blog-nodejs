@@ -4,3 +4,4 @@ node_modules
 **/logs/
 **/cert/
 **/mail.js
+pnpm-lock.yaml
