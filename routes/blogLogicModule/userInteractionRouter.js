@@ -73,13 +73,21 @@ redisClient.then((redisClient) => {
             browser,
             upvoke,
           };
-          pool.query('insert into msgboardforarticle set ?', data, (err) => {
-            if (err) return finalReject(err);
-            finalResolve(data);
-          });
+          pool.query(
+            'insert into msgboardforarticle set ?',
+            data,
+            (err, insertRes) => {
+              if (err) return finalReject(err);
+              finalResolve({
+                ...data,
+                toTop: cancelToTopSign,
+                msgId: insertRes.insertId,
+              });
+            },
+          );
         }).then(
           (info) => {
-            res.json({ code: 200, msg: '添加成功' });
+            res.json({ code: 200, msg: '添加成功', data: info });
             pool.query(
               'select title from articleinfo where articleId = ?',
               info.articleId,
@@ -147,13 +155,21 @@ redisClient.then((redisClient) => {
             upvoke,
             isAdmin,
           };
-          pool.query('insert into msgboardforarticle set ?', data, (err) => {
-            if (err) return finalReject(err);
-            finalResolve(data);
-          });
+          pool.query(
+            'insert into msgboardforarticle set ?',
+            data,
+            (err, insertRes) => {
+              if (err) return finalReject(err);
+              finalResolve({
+                ...data,
+                toTop: cancelToTopSign,
+                msgId: insertRes.insertId,
+              });
+            },
+          );
         }).then(
           (info) => {
-            res.json({ code: 200, msg: '添加成功' });
+            res.json({ code: 200, msg: '添加成功', data: info });
             pool.query(
               'select title from articleinfo where articleId = ?',
               info.articleId,
@@ -228,6 +244,13 @@ redisClient.then((redisClient) => {
               ...item,
               toTop: dayjs(item.toTop).format(dayFormat),
             }));
+            result.msgData.forEach(
+              (msgItem) =>
+                (msgItem.children = msgItem.children?.map((child) => ({
+                  ...child,
+                  toTop: dayjs(child.toTop).format(dayFormat),
+                }))),
+            );
             finalResolve(result);
           });
         });
@@ -444,18 +467,18 @@ redisClient.then((redisClient) => {
           pool.query(
             'insert into msgboardforall set ?',
             data,
-            (err, insetRes) => {
+            (err, insertRes) => {
               if (err) return finalReject(err);
               finalResolve({
                 ...data,
-                msgId: insetRes.insetId,
+                msgId: insertRes.insertId,
                 toTop: cancelToTopSign,
               });
             },
           );
         }).then(
           (info) => {
-            res.json({ code: 200, msg: '添加成功' });
+            res.json({ code: 200, msg: '添加成功', data: info });
             mailTransporter
               .sendMail({
                 from: '1263032107@qq.com',
@@ -503,29 +526,34 @@ redisClient.then((redisClient) => {
         const upvoke = 0;
         const isAdmin = 1;
         new Promise((finalResolve, finalReject) => {
+          const data = {
+            name,
+            content,
+            fatherMsgId,
+            mail,
+            website,
+            avatar,
+            subTime,
+            device,
+            browser,
+            upvoke,
+            isAdmin,
+          };
           pool.query(
             'insert into msgboardforall set ?',
-            {
-              name,
-              content,
-              fatherMsgId,
-              mail,
-              website,
-              avatar,
-              subTime,
-              device,
-              browser,
-              upvoke,
-              isAdmin,
-            },
-            (err) => {
+            data,
+            (err, insertRes) => {
               if (err) return finalReject(err);
-              finalResolve();
+              finalResolve({
+                ...data,
+                msgId: insertRes.insertId,
+                toTop: cancelToTopSign,
+              });
             },
           );
         }).then(
-          () => {
-            res.json({ code: 200, msg: '添加成功' });
+          (info) => {
+            res.json({ code: 200, msg: '添加成功', data: info });
             mailTransporter
               .sendMail({
                 from: '1263032107@qq.com',
@@ -595,6 +623,13 @@ redisClient.then((redisClient) => {
               ...item,
               toTop: dayjs(item.toTop).format(dayFormat),
             }));
+            result.msgData.forEach(
+              (msgItem) =>
+                (msgItem.children = msgItem.children?.map((child) => ({
+                  ...child,
+                  toTop: dayjs(child.toTop).format(dayFormat),
+                }))),
+            );
             finalResolve(result);
           });
         });
