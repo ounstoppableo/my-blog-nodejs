@@ -15,6 +15,8 @@ const browserPriority = {
   4: 'Firefox',
   5: 'Edg',
 };
+const cancelToTopSign = '1970-01-01 08:00:01';
+const dayFormat = 'YYYY-MM-DD hh:mm:ss';
 
 redisClient.then((redisClient) => {
   //添加留言-文章
@@ -36,7 +38,7 @@ redisClient.then((redisClient) => {
         } else {
           redisClient.set(mail, JSON.stringify({ name, avatar }));
         }
-        const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
+        const subTime = moment(new Date()).format(dayFormat);
         const device = req.headers['user-agent']
           .match(/\(.*?\)/)[0]
           .slice(1)
@@ -108,7 +110,7 @@ redisClient.then((redisClient) => {
         name = 'unstoppable840';
         website = '/';
         let avatar = '/adminAvatar/avatar.jpeg';
-        const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
+        const subTime = moment(new Date()).format(dayFormat);
         const device = req.headers['user-agent']
           .match(/\(.*?\)/)[0]
           .slice(1)
@@ -222,7 +224,10 @@ redisClient.then((redisClient) => {
             }
             const start = (page - 1) * limit;
             const end = limit * page;
-            result.msgData = result.msgData.slice(start, end);
+            result.msgData = result.msgData.slice(start, end).map((item) => ({
+              ...item,
+              toTop: dayjs(item.toTop).format(dayFormat),
+            }));
             finalResolve(result);
           });
         });
@@ -339,7 +344,7 @@ redisClient.then((redisClient) => {
       new Promise((resolve, reject) => {
         pool.query(
           'update msgboardforarticle set toTop = ? where msgId = ? ',
-          [dayjs(Date.now()).format('YYYY-MM-DD hh:mm:ss'), msgId],
+          [dayjs(Date.now()).format(dayFormat), msgId],
           (err) => {
             if (err) return reject(err);
             resolve(1);
@@ -365,7 +370,7 @@ redisClient.then((redisClient) => {
       new Promise((resolve, reject) => {
         pool.query(
           'update msgboardforarticle set toTop = ? where msgId = ? ',
-          ['1970-01-01 08:00:01', msgId],
+          [cancelToTopSign, msgId],
           (err) => {
             if (err) return reject(err);
             resolve(1);
@@ -402,7 +407,7 @@ redisClient.then((redisClient) => {
         } else {
           redisClient.set(mail, JSON.stringify({ name, avatar }));
         }
-        const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
+        const subTime = moment(new Date()).format(dayFormat);
         const device = req.headers['user-agent']
           .match(/\(.*?\)/)[0]
           .slice(1)
@@ -424,27 +429,32 @@ redisClient.then((redisClient) => {
         });
         const upvoke = 0;
         new Promise((finalResolve, finalReject) => {
+          const data = {
+            name,
+            content,
+            fatherMsgId,
+            mail,
+            website,
+            avatar,
+            subTime,
+            device,
+            browser,
+            upvoke,
+          };
           pool.query(
             'insert into msgboardforall set ?',
-            {
-              name,
-              content,
-              fatherMsgId,
-              mail,
-              website,
-              avatar,
-              subTime,
-              device,
-              browser,
-              upvoke,
-            },
-            (err) => {
+            data,
+            (err, insetRes) => {
               if (err) return finalReject(err);
-              finalResolve();
+              finalResolve({
+                ...data,
+                msgId: insetRes.insetId,
+                toTop: cancelToTopSign,
+              });
             },
           );
         }).then(
-          () => {
+          (info) => {
             res.json({ code: 200, msg: '添加成功' });
             mailTransporter
               .sendMail({
@@ -470,7 +480,7 @@ redisClient.then((redisClient) => {
         name = 'unstoppable840';
         website = '/';
         let avatar = '/adminAvatar/avatar.jpeg';
-        const subTime = moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
+        const subTime = moment(new Date()).format(dayFormat);
         const device = req.headers['user-agent']
           .match(/\(.*?\)/)[0]
           .slice(1)
@@ -581,7 +591,10 @@ redisClient.then((redisClient) => {
             }
             const start = (page - 1) * limit;
             const end = limit * page;
-            result.msgData = result.msgData.slice(start, end);
+            result.msgData = result.msgData.slice(start, end).map((item) => ({
+              ...item,
+              toTop: dayjs(item.toTop).format(dayFormat),
+            }));
             finalResolve(result);
           });
         });
@@ -697,7 +710,7 @@ redisClient.then((redisClient) => {
       new Promise((resolve, reject) => {
         pool.query(
           'update msgboardforall set toTop = ? where msgId = ? ',
-          [dayjs(Date.now()).format('YYYY-MM-DD hh:mm:ss'), msgId],
+          [dayjs(Date.now()).format(dayFormat), msgId],
           (err) => {
             if (err) return reject(err);
             resolve(1);
@@ -723,7 +736,7 @@ redisClient.then((redisClient) => {
       new Promise((resolve, reject) => {
         pool.query(
           'update msgboardforall set toTop = ? where msgId = ? ',
-          ['1970-01-01 08:00:01', msgId],
+          [cancelToTopSign, msgId],
           (err) => {
             if (err) return reject(err);
             resolve(1);

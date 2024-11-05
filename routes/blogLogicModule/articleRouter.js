@@ -15,6 +15,9 @@ const redisClient = require('../../redis/connect');
 const router = express.Router();
 const publicPath = __dirname + '/../../public';
 const blogUrl = 'https://www.unstoppable840.cn';
+const cancelToTopSign = '1970-01-01 08:00:01';
+const dayFormat = 'YYYY-MM-DD hh:mm:ss';
+
 redisClient.then((redisClient) => {
   //添加文章
   router.post('/addArticle', (req, res, next) => {
@@ -221,7 +224,13 @@ redisClient.then((redisClient) => {
       });
     }).then(
       () => {
-        res.json({ code: 200, data: articleInfoList });
+        res.json({
+          code: 200,
+          data: articleInfoList.map((item) => ({
+            ...item,
+            toTop: dayjs(item.toTop).format(dayFormat),
+          })),
+        });
       },
       (err) => {
         custom.log(err);
@@ -612,7 +621,10 @@ redisClient.then((redisClient) => {
         data.pages = Math.ceil(data.articleInfos.length / limit) || 1;
         if (page > data.pages)
           return res.json({ code: 400, msg: 'page超过限制' });
-        data.articleInfos = data.articleInfos.slice(start, end);
+        data.articleInfos = data.articleInfos.slice(start, end).map((item) => ({
+          ...item,
+          toTop: dayjs(item.toTop).format(dayFormat),
+        }));
         res.json({ code: 200, data });
       },
       (err) => {
@@ -733,7 +745,10 @@ redisClient.then((redisClient) => {
         data.pages = Math.ceil(data.articleInfos.length / limit) || 1;
         if (page > data.pages)
           return res.json({ code: 400, msg: 'page超出限制' });
-        data.articleInfos = data.articleInfos.slice(start, end);
+        data.articleInfos = data.articleInfos.slice(start, end).map((item) => ({
+          ...item,
+          toTop: dayjs(item.toTop).format(dayFormat),
+        }));
         res.json({ code: 200, data });
       },
       (err) => {
@@ -816,7 +831,12 @@ redisClient.then((redisClient) => {
         }
         if (page > result.pages)
           return res.json({ code: 400, msg: 'page超过最大页数' });
-        result.articleInfoList = articleInfoList.slice(start, end);
+        result.articleInfoList = articleInfoList
+          .slice(start, end)
+          .map((item) => ({
+            ...item,
+            toTop: dayjs(item.toTop).format(dayFormat),
+          }));
         res.json({ code: 200, data: result });
       },
       (err) => {
@@ -867,7 +887,7 @@ redisClient.then((redisClient) => {
       new Promise((resolve, reject) => {
         pool.query(
           'update articleinfo set toTop = ? where articleId = ? ',
-          [dayjs(Date.now()).format('YYYY-MM-DD hh:mm:ss'), articleId],
+          [dayjs(Date.now()).format(dayFormat), articleId],
           (err) => {
             if (err) return reject(err);
             resolve(1);
@@ -894,7 +914,7 @@ redisClient.then((redisClient) => {
       new Promise((resolve, reject) => {
         pool.query(
           'update articleinfo set toTop = ? where articleId = ? ',
-          ['1970-01-01 08:00:01', articleId],
+          [cancelToTopSign, articleId],
           (err) => {
             if (err) return reject(err);
             resolve(1);
@@ -916,7 +936,7 @@ redisClient.then((redisClient) => {
     const articleInfoList = [];
     new Promise((resolve, reject) => {
       //获取文章基本信息
-      const sql = `select * from articleinfo where toTop !='1970-01-01 08:00:01' order by toTop DESC`;
+      const sql = `select * from articleinfo where toTop !='${cancelToTopSign}' order by toTop DESC`;
       pool.query(sql, (err, dataForArticleinfo) => {
         if (err) return reject(err);
         const promiseArr = dataForArticleinfo.map((item, index) => {
