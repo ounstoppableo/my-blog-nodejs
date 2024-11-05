@@ -255,11 +255,29 @@ redisClient.then((redisClient) => {
             if (data[0]['COUNT(*)'] !== 0)
               return res.json({ code: 402, msg: '请先删除完子评论' });
             pool.query(
-              'delete from msgboardforarticle where msgId = ?',
+              'select * from  msgboardforarticle where msgId = ?',
               msgId,
-              (err) => {
-                if (err) return reject(err);
-                resolve(1);
+              (err, data) => {
+                pool.query(
+                  'delete from msgboardforarticle where msgId = ?',
+                  msgId,
+                  (err) => {
+                    if (err) return reject(err);
+                    resolve(1);
+                    if (data[0] && data[0].audit === 1)
+                      redisClient.zRem(
+                        'msgInfo',
+                        JSON.stringify({
+                          msgId: data[0].msgId,
+                          name: data[0].name,
+                          content: data[0].content,
+                          subTime: data[0].subTime,
+                          avatar: data[0].avatar,
+                          articleId: data[0].articleId,
+                        }),
+                      );
+                  },
+                );
               },
             );
           },
@@ -293,6 +311,17 @@ redisClient.then((redisClient) => {
       }).then(
         () => {
           res.json({ code: 200, msg: '审核成功' });
+          pool.query(
+            'select msgId, name, content, subTime,avatar,articleId from msgboardforarticle where msgId=?',
+            msgId,
+            (err, data) => {
+              if (err) return custom.log(err);
+              redisClient.zAdd('msgInfo', {
+                score: dayjs(data[0].subTime).unix(),
+                value: JSON.stringify(data[0]),
+              });
+            },
+          );
         },
         (err) => {
           custom.log(err);
@@ -585,11 +614,28 @@ redisClient.then((redisClient) => {
             if (data[0]['COUNT(*)'] !== 0)
               return res.json({ code: 402, msg: '请先删除完子评论' });
             pool.query(
-              'delete from msgboardforall where msgId = ?',
+              'select * from  msgboardforall where msgId = ?',
               msgId,
-              (err) => {
-                if (err) return reject(err);
-                resolve(1);
+              (err, data) => {
+                pool.query(
+                  'delete from msgboardforall where msgId = ?',
+                  msgId,
+                  (err) => {
+                    if (err) return reject(err);
+                    resolve(1);
+                    if (data[0] && data[0].audit === 1)
+                      redisClient.zRem(
+                        'msgInfo',
+                        JSON.stringify({
+                          msgId: data[0].msgId,
+                          name: data[0].name,
+                          content: data[0].content,
+                          subTime: data[0].subTime,
+                          avatar: data[0].avatar,
+                        }),
+                      );
+                  },
+                );
               },
             );
           },
@@ -623,6 +669,17 @@ redisClient.then((redisClient) => {
       }).then(
         () => {
           res.json({ code: 200, msg: '审核成功' });
+          pool.query(
+            'select msgId, name, content, subTime,avatar from msgboardforall where msgId=?',
+            msgId,
+            (err, data) => {
+              if (err) return custom.log(err);
+              redisClient.zAdd('msgInfo', {
+                score: dayjs(data[0].subTime).unix(),
+                value: JSON.stringify(data[0]),
+              });
+            },
+          );
         },
         (err) => {
           custom.log(err);
@@ -753,16 +810,19 @@ redisClient.then((redisClient) => {
   });
 
   //获取最新留言
-  router.get('/getNewMsg/:limit', (req, res, next) => {
+  router.get('/getNewMsg/:limit', async (req, res, next) => {
     const { limit } = req.params;
-    const sql = `SELECT msgId, name, content, subTime FROM msgboardforall WHERE audit = 1 UNION SELECT msgId, name, content, subTime FROM msgboardforarticle WHERE audit = 1 ORDER BY subTime DESC LIMIT ${limit};`;
-    pool.query(sql, (err, data) => {
-      if (err) {
-        custom.log(err);
-        res.json({ code: 500, msg: '服务器出错' });
-      }
-      res.json({ code: 200, msg: '请求成功', data });
-    });
+    try {
+      const msgInfo = await redisClient.zRange('msgInfo', -limit, -1);
+      res.json({
+        code: 200,
+        msg: '请求成功',
+        data: msgInfo.reverse().map((item) => JSON.parse(item)),
+      });
+    } catch (err) {
+      custom.log(err);
+      res.json({ code: 500, msg: '服务器出错' });
+    }
   });
 
   //订阅功能

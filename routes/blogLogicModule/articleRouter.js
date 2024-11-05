@@ -998,6 +998,23 @@ redisClient.then((redisClient) => {
     result.articleInfoList = articleInfoList.slice(start, end);
     return res.json({ code: 200, data: result });
   });
+  //随机文章
+  router.get('/getRandomArticle', async (req, res, next) => {
+    const { limit } = req.query;
+    const records = await redisClient.HGETALL('articleInfo');
+    const articleInfos = [];
+    for (let key in records) {
+      articleInfos.push(JSON.parse(records[key]));
+    }
+    const indexArr = [];
+    while (indexArr.length < limit) {
+      const index = Math.floor(Math.random() * articleInfos.length);
+      if (indexArr.includes(index)) continue;
+      indexArr.push(index);
+    }
+    const data = indexArr.map((index) => articleInfos[index]);
+    return res.json({ code: 200, data });
+  });
 });
 
 module.exports = router;
