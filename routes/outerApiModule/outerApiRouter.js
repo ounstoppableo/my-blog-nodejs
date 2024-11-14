@@ -8,6 +8,8 @@ const { lowerCase } = require('lodash');
 const custom = require('../../utils/log');
 const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
 
 const weatherDescriptionTrans = (text, hour) => {
   if (text.includes('Rain')) return 'rainy';
@@ -44,20 +46,27 @@ router.get('/weather', (req, res) => {
             const data = await fRes.json();
             if (data.code === '200') {
               const { hourly } = data;
-              console.log(hourly);
-              const result = hourly.map((hour) => ({
-                day:
-                  dayjs(hour.fxTime).date() === dayjs(data.updateTime).date()
-                    ? 'tod'
-                    : 'tom',
-                hour: dayjs(hour.fxTime).hour(),
-                weather: weatherDescriptionTrans(
-                  hour.text,
-                  dayjs(hour.fxTime).hour(),
-                ),
-                temp: +hour.temp,
-                time: dayjs(hour.fxTime).format('HH:mm'),
-              }));
+              const result = hourly.map((hour) => {
+                const fxTime = dayjs
+                  .utc(hour.fxTime)
+                  .local()
+                  .format('YYYY-MM-DD HH:mm:ss');
+                console.log(fxTime);
+                console.log(dayjs(fxTime).utc(true).hour());
+                return {
+                  day:
+                    dayjs(fxTime).date() === dayjs(data.updateTime).date()
+                      ? 'tod'
+                      : 'tom',
+                  hour: dayjs(fxTime).hour(),
+                  weather: weatherDescriptionTrans(
+                    hour.text,
+                    dayjs(fxTime).hour(),
+                  ),
+                  temp: +hour.temp,
+                  time: dayjs(fxTime).format('HH:mm'),
+                };
+              });
               res.json({
                 code: 200,
                 msg: '获取成功',
