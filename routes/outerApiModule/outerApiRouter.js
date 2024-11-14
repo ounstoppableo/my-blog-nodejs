@@ -8,8 +8,6 @@ const { lowerCase } = require('lodash');
 const custom = require('../../utils/log');
 const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
-const utc = require('dayjs/plugin/utc');
-dayjs.extend(utc);
 
 const weatherDescriptionTrans = (text, hour) => {
   if (text.includes('Rain')) return 'rainy';
@@ -47,12 +45,9 @@ router.get('/weather', (req, res) => {
             if (data.code === '200') {
               const { hourly } = data;
               const result = hourly.map((hour) => {
-                const fxTime = dayjs
-                  .utc(hour.fxTime)
-                  .local()
-                  .format('YYYY-MM-DD HH:mm:ss');
+                console.log(hour.fxTime);
+                const fxTime = dayjs(hour.fxTime).format('YYYY-MM-DD HH:mm:ss');
                 console.log(fxTime);
-                console.log(dayjs(fxTime).utc(true).hour());
                 return {
                   day:
                     dayjs(fxTime).date() === dayjs(data.updateTime).date()
