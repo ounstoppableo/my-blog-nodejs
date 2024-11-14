@@ -46,7 +46,9 @@ router.get('/weather', (req, res) => {
               const { hourly } = data;
               const result = hourly.map((hour) => {
                 console.log(hour.fxTime);
-                const fxTime = dayjs(hour.fxTime).format('YYYY-MM-DD HH:mm:ss');
+                const fxTime = dayjs(hour.fxTime.split('+')[0]).format(
+                  'YYYY-MM-DD HH:mm:ss',
+                );
                 console.log(fxTime);
                 return {
                   day:
