@@ -39,7 +39,7 @@ function generateMailTemplate(title, mail, description, url) {
             </a>。
             <hr />
           <p style="font-size:14px;color:#b7adad;text-align:center">
-            本邮件为系统自动发送，请勿直接回复邮件哦，可到博文内容回复。<br />https://www.unstoppable840.com</p>
+            本邮件为系统自动发送，请勿直接回复邮件哦，可到博客内回复~<br />https://www.unstoppable840.cn</p>
           </p>
           <img src="https://npm.elemecdn.com/hexo-butterfly-envelope/lib/line.png"
             style="width:100%;margin:25px auto 5px auto;display:block;pointer-events:none">

@@ -44,6 +44,7 @@ router.get('/weather', (req, res) => {
             const data = await fRes.json();
             if (data.code === '200') {
               const { hourly } = data;
+              console.log(hourly);
               const result = hourly.map((hour) => ({
                 day:
                   dayjs(hour.fxTime).date() === dayjs(data.updateTime).date()
