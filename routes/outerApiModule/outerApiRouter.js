@@ -10,8 +10,6 @@ const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
 
 const weatherDescriptionTrans = (text, hour) => {
-  if (text.includes('Rain')) return 'rainy';
-  if (text.includes('Snow')) return 'snowy';
   switch (text) {
     case 'Clear':
       if (hour < 6 || hour > 18) return 'clear-night';
@@ -19,13 +17,19 @@ const weatherDescriptionTrans = (text, hour) => {
     case 'Overcast':
       if (hour < 6 || hour > 18) return 'partly-cloudy-night';
       else return 'partly-cloudy';
+    case 'Partly Cloudy':
+      if (hour < 6 || hour > 18) return 'partly-cloudy-night';
+      else return 'partly-cloudy';
     case 'Thundershower':
       return 'thunderstorm';
     case 'Cloudy':
       return 'cloudy';
-    default:
-      return 'sunny';
   }
+  if (text.includes('Rain')) return 'rainy';
+  if (text.includes('Snow')) return 'snowy';
+  if (text.includes('Foggy')) return 'foggy';
+  if (text.includes('Clouds')) return 'cloudy';
+  return text;
 };
 
 router.get('/weather', (req, res) => {
