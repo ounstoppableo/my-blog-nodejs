@@ -10,8 +10,8 @@ const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
 
 const weatherDescriptionTrans = (text, hour) => {
-  console.log(text)
   if (text.includes('Rain')) return 'rainy';
+  if (text.includes('snow')) return 'snowy';
   switch (text) {
     case 'Clear':
       if (hour < 6 || hour > 18) return 'clear-night';
