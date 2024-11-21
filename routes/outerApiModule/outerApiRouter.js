@@ -10,25 +10,24 @@ const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
 
 const weatherDescriptionTrans = (text, hour) => {
+  text = lowerCase(text);
   switch (text) {
-    case 'Clear':
+    case 'clear':
       if (hour < 6 || hour > 18) return 'clear-night';
       else return 'sunny';
-    case 'Overcast':
+    case 'overcast':
       if (hour < 6 || hour > 18) return 'partly-cloudy-night';
       else return 'partly-cloudy';
-    case 'Partly Cloudy':
+    case 'partly cloudy':
       if (hour < 6 || hour > 18) return 'partly-cloudy-night';
       else return 'partly-cloudy';
-    case 'Thundershower':
+    case 'thundershower':
       return 'thunderstorm';
-    case 'Cloudy':
-      return 'cloudy';
   }
-  if (text.includes('Rain')) return 'rainy';
-  if (text.includes('Snow')) return 'snowy';
-  if (text.includes('Foggy')) return 'foggy';
-  if (text.includes('Clouds')) return 'cloudy';
+  if (text.includes('rain')) return 'rainy';
+  if (text.includes('snow')) return 'snowy';
+  if (text.includes('foggy')) return 'foggy';
+  if (text.includes('clouds')) return 'cloudy';
   return text;
 };
 
