@@ -12,6 +12,7 @@ var path = require('path');
 var logger = require('jet-logger');
 const articleInfoPreheat = require('../preheat/articleInfoPreheat');
 const msgInfoPreheat = require('../preheat/msgInfoPreheat');
+const generateSiteMap = require('../utils/generateSiteMap');
 
 /**
  * Get port from environment and store in Express.
@@ -30,6 +31,8 @@ const httpsServer = https.createServer(
   app,
 );
 
-Promise.all([articleInfoPreheat(), msgInfoPreheat()]).then(() => {
-  httpsServer.listen(3000, () => logger.default.info(SERVER_START_MSG));
-});
+Promise.all([articleInfoPreheat(), msgInfoPreheat(), generateSiteMap()]).then(
+  () => {
+    httpsServer.listen(3000, () => logger.default.info(SERVER_START_MSG));
+  },
+);
