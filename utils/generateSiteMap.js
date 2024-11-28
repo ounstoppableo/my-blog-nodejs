@@ -37,6 +37,7 @@ const generateSiteMap = () => {
           }
         },
       );
+      reolve(1);
     });
   });
 };
