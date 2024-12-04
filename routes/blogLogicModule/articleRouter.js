@@ -468,29 +468,6 @@ redisClient.then((redisClient) => {
       }).then(
         () => {
           res.json({ code: 200, msg: '更新成功' });
-          pool.query('select * from subscribeList', (err, data) => {
-            if (err) {
-              return custom.log(err);
-            }
-            data.forEach((item) => {
-              const { mail } = item;
-              mailTransporter
-                .sendMail({
-                  from: '1263032107@qq.com',
-                  to: mail,
-                  subject: `unustoppable840's blog 更新了文章🎊，快来看看吧~~`,
-                  html: generateMailTemplate(
-                    title,
-                    mail,
-                    description,
-                    blogUrl + '/article/' + articleId,
-                  ),
-                })
-                .catch((err) => {
-                  custom.log(err);
-                });
-            });
-          });
         },
         (err) => {
           custom.log(err);
