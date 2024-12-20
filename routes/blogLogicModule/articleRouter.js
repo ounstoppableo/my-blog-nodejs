@@ -349,122 +349,141 @@ redisClient.then((redisClient) => {
         backImgUrl,
         listOfTagOptions,
       } = req.body;
-      // if (!articleId || !title || !folderId || !description || !articleUrl || !backImgUrl || listOfTagOptions.length === 0) return res.json({ code: 400, msg: '字段不全' })
+      if (
+        !articleId ||
+        !title ||
+        !folderId ||
+        !description ||
+        !backImgUrl ||
+        listOfTagOptions.length === 0
+      )
+        return res.json({ code: 400, msg: '字段不全' });
       const date = moment(new Date()).format('YYYY-MM-DD');
-      const fileUrl = publicPath + articleUrl;
-      //先把文章读取出来
       new Promise((finalResolve, reject) => {
-        fs.readFile(fileUrl, (err, fileData) => {
-          if (err) return reject(err);
-          fileData = mdImgtagToHtmlImgtag(fileData.toString());
-          //先更新文章信息表，有了articleId再进行文章内容表的更新
-          pool.query(
-            'update articleinfo SET ? where articleId = ?',
-            [
-              {
-                title,
-                folderId,
-                lastModifyTime: date,
-                description,
-                backImgUrl,
-              },
-              articleId,
-            ],
-            (err) => {
-              if (err) return reject(err);
-              //文章内容表的更新
-              pool.query(
-                'update articledetail SET ? where articleId = ?',
-                [{ articleContent: fileData }, articleId],
-                (err) => {
-                  if (err) return reject(err);
-                  //tags表的更新
-                  pool.query('select * from tags', (err, data) => {
-                    if (err) return reject(err);
-                    const tags = listOfTagOptions
-                      .filter((item) => {
-                        return (
-                          data.findIndex((tag) => tag.tagName === item) === -1
-                        );
-                      })
-                      .map((item) => {
-                        return {
-                          tagName: item,
-                          tagColor: rdmRgbColor(),
-                        };
-                      });
-                    const promiseArr = tags.map((item) => {
-                      return new Promise((resolve) => {
-                        pool.query('insert into tags set ?', item, (err) => {
-                          if (err) return reject(err);
-                          resolve(1);
-                        });
-                      });
-                    });
-                    Promise.all(promiseArr).then(() => {
-                      //tags表更新后接着更新articleToTags表
-                      pool.query(
-                        'select * from articletotag where articleId = ?',
-                        [articleId],
-                        (err, data) => {
-                          if (err) return reject(err);
-                          const needDelTags = data
-                            .filter(
-                              (item) =>
-                                listOfTagOptions.findIndex(
-                                  (tagName) => tagName === item.tagName,
-                                ) === -1,
-                            )
-                            .map((item) => item.tagName);
-                          const needAddTags = listOfTagOptions.filter(
-                            (tagName) =>
-                              data.findIndex(
-                                (item) => item.tagName === tagName,
-                              ) === -1,
-                          );
-                          const promiseArr1 = needDelTags.map((item) => {
-                            return new Promise((resolve) => {
-                              pool.query(
-                                'delete from articletotag where articleId = ? and tagName=?',
-                                [articleId, item],
-                                (err) => {
-                                  if (err) return reject(err);
-                                  resolve(1);
-                                },
-                              );
-                            });
-                          });
-                          const promiseArr2 = needAddTags.map((item) => {
-                            return new Promise((resolve) => {
-                              pool.query(
-                                'insert into articletotag set ?',
-                                { articleId, tagName: item },
-                                (err) => {
-                                  if (err) return reject(err);
-                                  resolve(1);
-                                },
-                              );
-                            });
-                          });
-                          Promise.all([...promiseArr1, ...promiseArr2]).then(
-                            () => {
-                              finalResolve(1);
-                            },
-                          );
-                        },
-                      );
+        pool.query(
+          'update articleinfo SET ? where articleId = ?',
+          [
+            {
+              title,
+              folderId,
+              lastModifyTime: date,
+              description,
+              backImgUrl,
+            },
+            articleId,
+          ],
+          (err) => {
+            if (err) return reject(err);
+            //tags表的更新
+            const promiseForTag = new Promise((resolveForTag) => {
+              pool.query('select * from tags', (err, data) => {
+                if (err) return reject(err);
+                const tags = listOfTagOptions
+                  .filter((item) => {
+                    return data.findIndex((tag) => tag.tagName === item) === -1;
+                  })
+                  .map((item) => {
+                    return {
+                      tagName: item,
+                      tagColor: rdmRgbColor(),
+                    };
+                  });
+                const promiseArr = tags.map((item) => {
+                  return new Promise((resolve) => {
+                    pool.query('insert into tags set ?', item, (err) => {
+                      if (err) return reject(err);
+                      resolve(1);
                     });
                   });
-                  //更新完删除本地存储
-                  fs.unlink(fileUrl, (err) => {
-                    if (err) throw err;
-                    custom.log('文件已删除');
+                });
+                Promise.all(promiseArr).then(() => {
+                  //tags表更新后接着更新articleToTags表
+                  pool.query(
+                    'select * from articletotag where articleId = ?',
+                    [articleId],
+                    (err, data) => {
+                      if (err) return reject(err);
+                      const needDelTags = data
+                        .filter(
+                          (item) =>
+                            listOfTagOptions.findIndex(
+                              (tagName) => tagName === item.tagName,
+                            ) === -1,
+                        )
+                        .map((item) => item.tagName);
+                      const needAddTags = listOfTagOptions.filter(
+                        (tagName) =>
+                          data.findIndex((item) => item.tagName === tagName) ===
+                          -1,
+                      );
+                      const promiseArr1 = needDelTags.map((item) => {
+                        return new Promise((resolve) => {
+                          pool.query(
+                            'delete from articletotag where articleId = ? and tagName=?',
+                            [articleId, item],
+                            (err) => {
+                              if (err) return reject(err);
+                              resolve(1);
+                            },
+                          );
+                        });
+                      });
+                      const promiseArr2 = needAddTags.map((item) => {
+                        return new Promise((resolve) => {
+                          pool.query(
+                            'insert into articletotag set ?',
+                            { articleId, tagName: item },
+                            (err) => {
+                              if (err) return reject(err);
+                              resolve(1);
+                            },
+                          );
+                        });
+                      });
+                      Promise.all([...promiseArr1, ...promiseArr2]).then(() => {
+                        resolveForTag(1);
+                      });
+                    },
+                  );
+                });
+              });
+            });
+            let promiseForArticleContent;
+            const fileUrl = publicPath + articleUrl;
+            if (articleUrl) {
+              promiseForArticleContent = new Promise(
+                (resolveForArticleContent) => {
+                  fs.readFile(fileUrl, (err, fileData) => {
+                    if (err) return reject(err);
+                    fileData = mdImgtagToHtmlImgtag(fileData.toString());
+                    //文章内容表的更新
+                    pool.query(
+                      'update articledetail SET ? where articleId = ?',
+                      [{ articleContent: fileData }, articleId],
+                      (err) => {
+                        if (err) return reject(err);
+                        resolveForArticleContent(1);
+                        //更新完删除本地存储
+                        fs.unlink(fileUrl, (err) => {
+                          if (err) throw err;
+                          custom.log('文件已删除');
+                        });
+                      },
+                    );
                   });
                 },
               );
-            },
-          );
-        });
+            }
+            Promise.all([
+              promiseForTag,
+              promiseForArticleContent
+                ? promiseForArticleContent
+                : Promise.resolve(),
+            ]).then(() => {
+              finalResolve(1);
+            });
+          },
+        );
       }).then(
         () => {
           res.json({ code: 200, msg: '更新成功' });
