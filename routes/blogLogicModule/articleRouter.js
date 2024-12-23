@@ -175,53 +175,15 @@ redisClient.then((redisClient) => {
   //获取文章信息
   router.get('/getArticleInfo', (req, res, next) => {
     const articleInfoList = [];
-    new Promise((resolve, reject) => {
-      //获取文章基本信息
-      const sql = `select * from articleinfo order by lastModifyTime DESC`;
-      pool.query(sql, (err, dataForArticleinfo) => {
-        if (err) return reject(err);
-        const promiseArr = dataForArticleinfo.map((item, index) => {
-          articleInfoList.push(item);
-          //获取文章标签
-          return new Promise((resolve) => {
-            pool.query(
-              'select folderName from folder where folderId = ?',
-              [item.folderId],
-              (err, dataForfolder) => {
-                if (err) return reject(err);
-                articleInfoList[index].folderName = dataForfolder[0].folderName;
-                pool.query(
-                  'select * from articletotag where articleId = ?',
-                  [item.articleId],
-                  (err, dataForArticletotag) => {
-                    if (err) return reject(err);
-                    articleInfoList[index].tags = [];
-                    const promiseArr = dataForArticletotag.map((item) => {
-                      return new Promise((resolve) => {
-                        pool.query(
-                          'select * from tags where tagName = ?',
-                          [item.tagName],
-                          (err, dataForTags) => {
-                            if (err) return reject(err);
-                            articleInfoList[index].tags.push(dataForTags[0]);
-                            resolve(1);
-                          },
-                        );
-                      });
-                    });
-                    Promise.all(promiseArr).then(() => {
-                      resolve(1);
-                    });
-                  },
-                );
-              },
-            );
-          });
-        });
-        Promise.all(promiseArr).then(() => {
-          resolve(1);
-        });
-      });
+    new Promise(async (resolve, reject) => {
+      const records = await redisClient.HGETALL('articleInfo');
+      for (let key in records) {
+        articleInfoList.push(JSON.parse(records[key]));
+      }
+      articleInfoList.sort(
+        (a, b) => dayjs(b.lastModifyTime).unix() - dayjs(a.lastModifyTime).unix(),
+      );
+      resolve(1);
     }).then(
       () => {
         res.json({
