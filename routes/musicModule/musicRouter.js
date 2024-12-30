@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const pool = require('../../mysql/pool');
 const { resolve } = require('path');
 const custom = require('../../utils/log');
+const dayjs = require('dayjs');
 const router = express.Router();
 const publicPath = __dirname + '/../../public';
 const uploadMusic = multer({
@@ -140,7 +141,11 @@ router.get('/getMusicInfo', (req, res) => {
       custom.log(err);
       res.json({ code: 500, msg: '获取音乐失败' });
     }
-    res.json({ code: 200, msg: '获取音乐成功', result: data });
+    res.json({
+      code: 200,
+      msg: '获取音乐成功',
+      result: data.sort((a, b) => dayjs(b.sort).unix() - dayjs(a.sort).unix()),
+    });
   });
 });
 
