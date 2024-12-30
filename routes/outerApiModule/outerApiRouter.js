@@ -39,14 +39,14 @@ router.get('/weather', (req, res) => {
   )
     .then(async (fRes) => {
       const data = await fRes.json();
-      if (data.code === '200') {
+      if (data.code == '200') {
         const { location: locationDetail } = data;
         fetch(
           `https://devapi.qweather.com/v7/weather/24h?location=${location}&lang=en&key=${hefengKey}`,
         )
           .then(async (fRes) => {
             const data = await fRes.json();
-            if (data.code === '200') {
+            if (data.code == '200') {
               const { hourly } = data;
               const result = hourly.map((hour) => {
                 const fxTime = dayjs(hour.fxTime.split('+')[0]).format(
