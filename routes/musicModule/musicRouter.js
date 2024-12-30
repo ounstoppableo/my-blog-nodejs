@@ -1,4 +1,5 @@
 const express = require('express');
+const { loadMusicMetadata } = require('music-metadata');
 const multer = require('multer');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
@@ -92,16 +93,21 @@ router.post('/addMusic', (req, res) => {
     }
     const param = req.body;
     const path = resolve(publicPath, 'temp', param.lyricUrl);
-    new Promise((resolve, reject) => {
+    const musicPath = resolve(publicPath, 'music', param.musicUrl);
+    new Promise(async (resolve, reject) => {
       const lyric = param.lyricUrl ? fs.readFileSync(path).toString() : '';
+      const mm = await loadMusicMetadata();
+      const metadata = await mm.parseFile(musicPath);
+      const musicTime = metadata.format.duration;
       pool.query(
-        'insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?',
+        'insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?,musicTime=?',
         [
           param.picUrl,
           lyric,
           param.musicUrl,
           param.musicName,
           param.musicAuthor,
+          musicTime,
         ],
         (err, data) => {
           if (err) {
