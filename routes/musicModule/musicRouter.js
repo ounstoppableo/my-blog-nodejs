@@ -101,7 +101,7 @@ router.post('/addMusic', (req, res) => {
       const metadata = await mm.parseFile(musicPath);
       const musicTime = metadata.format.duration;
       pool.query(
-        'insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?,musicTime=?',
+        'insert into music set picUrl=?,lyric=?,musicUrl=?,musicName=?,musicAuthor=?,musicTime=?,sort=?',
         [
           param.picUrl,
           lyric,
@@ -109,6 +109,7 @@ router.post('/addMusic', (req, res) => {
           param.musicName,
           param.musicAuthor,
           musicTime,
+          day(new Date()).format('YYYY-MM-DD HH:mm:ss')
         ],
         (err, data) => {
           if (err) {
