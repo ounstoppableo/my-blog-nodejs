@@ -39,7 +39,6 @@ router.get('/weather', (req, res) => {
   )
     .then(async (fRes) => {
       const data = await fRes.json();
-      console.log(data);
       if (data.code == '200') {
         const { location: locationDetail } = data;
         fetch(
