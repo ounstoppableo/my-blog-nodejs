@@ -109,7 +109,7 @@ router.post('/addMusic', (req, res) => {
           param.musicName,
           param.musicAuthor,
           musicTime,
-          day(new Date()).format('YYYY-MM-DD HH:mm:ss')
+          dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss')
         ],
         (err, data) => {
           if (err) {
