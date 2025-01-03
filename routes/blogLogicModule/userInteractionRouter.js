@@ -8,6 +8,9 @@ const redisClient = require('../../redis/connect');
 const dayjs = require('dayjs');
 const mailTransporter = require('../../mail/mail');
 const router = express.Router();
+const {
+  generateMailTemplateForSubscribe,
+} = require('../../utils/generateMailTemplate');
 const browserPriority = {
   1: 'Safari',
   2: 'Chrome',
@@ -889,6 +892,16 @@ redisClient.then((redisClient) => {
           }
         }
         res.json({ code: 200, msg: '订阅成功~' });
+        mailTransporter
+          .sendMail({
+            from: '1263032107@qq.com',
+            to: mail,
+            subject: `订阅『unustoppable840's blog』成功🎊🎊🎊`,
+            html: generateMailTemplateForSubscribe(mail),
+          })
+          .catch((err) => {
+            custom.log(err);
+          });
       },
     );
   });

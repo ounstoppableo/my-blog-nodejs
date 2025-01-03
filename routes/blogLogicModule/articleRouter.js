@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const dayjs = require('dayjs');
 const mailTransporter = require('../../mail/mail');
-const generateMailTemplate = require('../../utils/generateMailTemplate');
+const { generateMailTemplate } = require('../../utils/generateMailTemplate');
 const redisClient = require('../../redis/connect');
 const router = express.Router();
 const publicPath = __dirname + '/../../public';
@@ -181,7 +181,8 @@ redisClient.then((redisClient) => {
         articleInfoList.push(JSON.parse(records[key]));
       }
       articleInfoList.sort(
-        (a, b) => dayjs(b.lastModifyTime).unix() - dayjs(a.lastModifyTime).unix(),
+        (a, b) =>
+          dayjs(b.lastModifyTime).unix() - dayjs(a.lastModifyTime).unix(),
       );
       resolve(1);
     }).then(
