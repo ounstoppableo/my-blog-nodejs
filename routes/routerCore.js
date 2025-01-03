@@ -7,6 +7,7 @@ const burialPointRouter = require('./serverInfoModule/burialPointRouter');
 const serverBaseInfoRouter = require('./serverInfoModule/serverBaseInfoRouter');
 const outerApiRouter = require('./outerApiModule/outerApiRouter');
 const bookRouter = require('./bookLogicModule/bookRouter');
+const friendRouter = require('./friendLogicModule/friendRouter');
 
 const express = require('express');
 const router = express.Router();
@@ -23,6 +24,7 @@ redisClient.then((redisClient) => {
   router.use('/', serverBaseInfoRouter);
   router.use('/', outerApiRouter);
   router.use('/', bookRouter);
+  router.use('/', friendRouter);
 });
 
 module.exports = router;
