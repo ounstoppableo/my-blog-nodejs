@@ -22,6 +22,7 @@ redisClient.then((redisClient) => {
               custom.log(err);
               return reject({ code: 500, msg: '服务器出错' });
             }
+            data.sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
             resolve(data);
           });
         } else {
@@ -30,6 +31,7 @@ redisClient.then((redisClient) => {
               custom.log(err);
               return reject({ code: 500, msg: '服务器出错' });
             }
+            data.sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
             resolve(data);
           });
         }
@@ -122,16 +124,20 @@ redisClient.then((redisClient) => {
     const { website } = req.body;
     jwt.verify(req.headers.token, '123456', (err) => {
       if (err) return res.json({ code: 401, msg: 'token失效' });
-      pool.query('delete from friend where website=?', [website], (err, data) => {
-        if (err) {
-          custom.log(err);
-          return reject({ code: 500, msg: '服务器出错' });
-        }
-        res.json({
-          code: 200,
-          msg: '删除成功！',
-        });
-      });
+      pool.query(
+        'delete from friend where website=?',
+        [website],
+        (err, data) => {
+          if (err) {
+            custom.log(err);
+            return reject({ code: 500, msg: '服务器出错' });
+          }
+          res.json({
+            code: 200,
+            msg: '删除成功！',
+          });
+        },
+      );
     });
   });
 });
