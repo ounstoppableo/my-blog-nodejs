@@ -48,7 +48,16 @@ redisClient.then((redisClient) => {
         });
     });
   });
-  router.post('/addFriend', (req, res, next) => {
+  router.post('/addFriend', async (req, res, next) => {
+    const ip = getClientIp(req);
+    let flag = await redisClient.get('addFriend:' + ip);
+    if (JSON.parse(flag)) {
+      return res.json({ code: 402, msg: '请不要频繁发送！' });
+    } else {
+      await redisClient.set('addFriend:' + ip, 'true', {
+        EX: 10,
+      });
+    }
     const { name, brief, website, cover } = req.body;
     if (!name || !brief || !website || !cover)
       return res.json({ code: 402, msg: '参数不全！' });
