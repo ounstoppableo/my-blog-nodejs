@@ -27,7 +27,7 @@ function generateMailTemplate(title, mail, description, url) {
           </p>
         </div>
         <div class="formmain"
-          style="background:#fff;width:100%;max-width:800px;margin:auto auto;border: 1px solid #564f4f59;overflow:hidden;pointer-events:none">
+          style="background:#fff;width:100%;max-width:800px;margin:auto auto;border: 1px solid #ccc;overflow:hidden;pointer-events:none">
           <div style="margin:40px auto;width:90%;">
             <p>Hi，${mail}，『unstoppable840's blog』上更新了文章：</p>
             <div style="background: #eee;margin:20px 0px;padding:15px;border-radius:5px;font-size:15px;color:#555555;">
