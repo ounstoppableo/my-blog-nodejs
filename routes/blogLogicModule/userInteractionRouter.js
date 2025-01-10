@@ -7,6 +7,7 @@ const custom = require('../../utils/log');
 const redisClient = require('../../redis/connect');
 const dayjs = require('dayjs');
 const mailTransporter = require('../../mail/mail');
+const getClientIp = require('../../utils/getIp');
 const router = express.Router();
 const {
   generateMailTemplateForSubscribe,
@@ -23,7 +24,16 @@ const dayFormat = 'YYYY-MM-DD hh:mm:ss';
 
 redisClient.then((redisClient) => {
   //添加留言-文章
-  router.post('/addMsgForArticle', (req, res, next) => {
+  router.post('/addMsgForArticle', async (req, res, next) => {
+    const ip = getClientIp(req);
+    let flag = await redisClient.get('addMsgForAritcle:' + ip);
+    if (JSON.parse(flag)) {
+      return res.json({ code: 402, msg: '请不要频繁发送！' });
+    } else {
+      await redisClient.set('addMsgForAritcle:' + ip, 'true', {
+        EX: 3,
+      });
+    }
     jwt.verify(req.headers.token, '123456', async (err) => {
       if (err) {
         let { name, content, fatherMsgId, articleId, mail, website } = req.body;
@@ -416,6 +426,15 @@ redisClient.then((redisClient) => {
 
   //添加留言-留言板
   router.post('/addMsgForBoard', async (req, res, next) => {
+    const ip = getClientIp(req);
+    let flag = await redisClient.get('addMsgForBoard:' + ip);
+    if (JSON.parse(flag)) {
+      return res.json({ code: 402, msg: '请不要频繁发送！' });
+    } else {
+      await redisClient.set('addMsgForBoard:' + ip, 'true', {
+        EX: 3,
+      });
+    }
     jwt.verify(req.headers.token, '123456', async (err) => {
       if (err) {
         let { name, content, fatherMsgId, mail, website } = req.body;

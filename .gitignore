@@ -7,3 +7,4 @@ node_modules
 pnpm-lock.yaml
 **/secretManage
 **/sitemap/sitemap.xml
+**/loginKey/private_key.pem
