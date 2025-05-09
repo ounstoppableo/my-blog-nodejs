@@ -248,6 +248,7 @@ redisClient.then((redisClient) => {
               (item) => !map.get(item.msgId),
             );
             result.pages = Math.ceil(result.msgData.length / limit) || 1;
+            result.total = result.msgData.length;
             if (page > result.pages) {
               finalReject('page超出范围');
             }
@@ -636,6 +637,7 @@ redisClient.then((redisClient) => {
               (item) => !map.get(item.msgId),
             );
             result.pages = Math.ceil(result.msgData.length / limit) || 1;
+            result.total = result.msgData.length;
             if (page > result.pages) {
               finalReject('page超出范围');
             }
