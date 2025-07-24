@@ -704,6 +704,7 @@ redisClient.then((redisClient) => {
         data.pages = Math.ceil(data.articleInfos.length / limit) || 1;
         if (page > data.pages)
           return res.json({ code: 400, msg: 'page超出限制' });
+        data.articleInfos.sort((a, b) => b.lastModifyTime - a.lastModifyTime);
         data.articleInfos = data.articleInfos.slice(start, end).map((item) => ({
           ...item,
           toTop: dayjs(item.toTop).format(dayFormat),
@@ -963,6 +964,7 @@ redisClient.then((redisClient) => {
     for (let key in records) {
       articleInfos.push(JSON.parse(records[key]));
     }
+    articleInfos.sort((a, b) => b.lastModifyTime - a.lastModifyTime);
     articleInfos.sort((a, b) => b.VT - a.VT);
     const articleInfoList = articleInfos.filter((articleInfo) => {
       return articleInfo.title.toLowerCase().includes(searchText.toLowerCase());
