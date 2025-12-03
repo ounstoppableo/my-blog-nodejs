@@ -35,7 +35,7 @@ router.get('/weather', (req, res) => {
   let { location } = req.query;
   if (!location) location = '114.06,22.54';
   fetch(
-    `https://geoapi.qweather.com/v2/city/lookup?location=${location}&key=${hefengKey}`,
+    `https://km6e4cn2t9.re.qweatherapi.com/geo/v2/city/lookup?location=${location}&key=${hefengKey}`,
   )
     .then(async (fRes) => {
       const data = await fRes.json();
