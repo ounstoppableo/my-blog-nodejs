@@ -10,7 +10,7 @@ const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
 const env = require('../../enviroment')
 const { HttpsProxyAgent } = require("https-proxy-agent");
-const agent = new HttpsProxyAgent("http://127.0.0.1:7890");
+const agent = new HttpsProxyAgent(env.CLASH);
 
 const weatherDescriptionTrans = (text, hour) => {
   text = lowerCase(text);
