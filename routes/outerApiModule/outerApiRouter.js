@@ -8,6 +8,9 @@ const { lowerCase } = require('lodash');
 const custom = require('../../utils/log');
 const weatherData = require('./defaultData')['weatherData'];
 const locationData = require('./defaultData')['locationData'];
+const env = require('../../enviroment')
+const { HttpsProxyAgent } = require("https-proxy-agent");
+const agent = new HttpsProxyAgent("http://127.0.0.1:7890");
 
 const weatherDescriptionTrans = (text, hour) => {
   text = lowerCase(text);
@@ -92,6 +95,27 @@ router.get('/weather', (req, res) => {
           location: locationData,
         },
       });
+    });
+});
+
+router.get('/bitcoin_market_chart', (req, res) => {
+  fetch(
+    `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily`,
+    {
+      agent,
+      headers: {
+        "content-type": "application/json",
+        "x-cg-demo-api-key": env.COINGECKO_API_KEY,
+      }
+    }
+  )
+    .then(async (fRes) => {
+      const data = await fRes.json();
+      res.json(data);
+    })
+    .catch((err) => {
+      custom.log(err);
+      res.json([]);
     });
 });
 

@@ -8,3 +8,4 @@ pnpm-lock.yaml
 **/secretManage
 **/sitemap/sitemap.xml
 **/loginKey/private_key.pem
+enviroment.js
